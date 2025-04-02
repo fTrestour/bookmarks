@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+All environment variables that are used should be documented in [README.md](mdc:README.md) and included in @.env.example
+
+All configuration should be exposed through env variables.

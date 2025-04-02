@@ -5,10 +5,6 @@ It can be be plugged to various data sources, such as Pocket.
 
 ## Architecture
 
-### Configuration
-
-Configuration will happen through env variables. An `.env.example` shows the various env variable that need to be set for the system to work
-
 ### Database
 
 A libsql database is used to store bookmarks.

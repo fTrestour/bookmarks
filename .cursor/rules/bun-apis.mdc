@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Prefer bun apis to node ones when possible. Also prefer Bun apis to external libraries
