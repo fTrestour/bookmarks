@@ -77,8 +77,8 @@ describe("BookmarksService", () => {
       const result = await service.listBookmarks();
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe(second.id); // Most recent first
-      expect(result[1].id).toBe(first.id);
+      expect(result[0].url).toBe(second.url); // Most recent first
+      expect(result[1].url).toBe(first.url);
     });
   });
 
@@ -105,13 +105,13 @@ describe("BookmarksService", () => {
 
       // The programming book should be first and have high similarity
       expect(result[0]).toMatchObject({
-        id: programming.id,
+        url: programming.url,
         title: "Programming Book",
       });
 
       // The cooking book should be much less similar
       if (result.length > 1) {
-        expect(result[1].id).toBe(cooking.id);
+        expect(result[1].url).toBe(cooking.url);
       }
     });
 

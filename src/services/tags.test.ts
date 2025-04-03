@@ -29,21 +29,24 @@ describe("TagsService", () => {
         "Programming Book",
         "http://programming.com",
         "A book about programming",
-        ["programming", "typescript"]
+        ["programming", "typescript"],
+        "pocket-123"
       );
 
       await bookmarksService.createBookmark(
         "Another Programming Book",
         "http://programming2.com",
         "Another book about programming",
-        ["programming", "javascript"]
+        ["programming", "javascript"],
+        "pocket-234"
       );
 
       await bookmarksService.createBookmark(
         "Cooking Book",
         "http://cooking.com",
         "A book about cooking",
-        ["cooking"]
+        ["cooking"],
+        "pocket345"
       );
 
       const tags = await tagsService.listTags();
