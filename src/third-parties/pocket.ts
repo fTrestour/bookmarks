@@ -23,33 +23,48 @@ export class PocketService {
     private accessToken: string
   ) {}
 
-  async syncFavorites(since?: Date): Promise<number> {
-    const response = await fetch("https://getpocket.com/v3/get", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Accept": "application/json",
-      },
-      body: JSON.stringify({
-        consumer_key: this.consumerKey,
-        access_token: this.accessToken,
-        favorite: "1",
-        since: since?.toISOString(),
-        detailType: "complete",
-      }),
-    });
+  async syncFavorites(): Promise<number> {
+    let bookmarks = new Array<PocketItem>();
+    let fetchMore = true;
+    let offset = 0;
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch from Pocket: ${response.statusText}`);
-    }
+    while (fetchMore) {
+      const response = await fetch("https://getpocket.com/v3/get", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Accept": "application/json",
+        },
+        body: JSON.stringify({
+          consumer_key: this.consumerKey,
+          access_token: this.accessToken,
+          favorite: "1",
+          detailType: "complete",
+          offset,
+        }),
+      });
 
-    const data = (await response.json()) as PocketResponse;
-    if (data.error) {
-      throw new Error(`Pocket API error: ${data.error}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch from Pocket: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as PocketResponse;
+      if (data.error) {
+        throw new Error(`Pocket API error: ${data.error}`);
+      }
+
+      const items = Object.values(data.list);
+      bookmarks.push(...items);
+
+      if (items.length < 30) {
+        fetchMore = false;
+      } else {
+        offset += 30;
+      }
     }
 
     let created = 0;
-    for (const item of Object.values(data.list)) {
+    for (const item of bookmarks) {
       try {
         const tags = item.tags
           ? Object.values(item.tags).map((tag) => tag.tag)
@@ -62,6 +77,7 @@ export class PocketService {
           tags,
           item.item_id
         );
+
         created++;
       } catch (error) {
         if (
