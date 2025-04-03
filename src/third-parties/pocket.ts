@@ -6,7 +6,7 @@ interface PocketItem {
   resolved_url: string;
   excerpt: string;
   time_added: string;
-  tags?: string[];
+  tags?: Record<string, { tag: string }>;
 }
 
 interface PocketResponse {
@@ -51,11 +51,15 @@ export class PocketService {
     let created = 0;
     for (const item of Object.values(data.list)) {
       try {
+        const tags = item.tags
+          ? Object.values(item.tags).map((tag) => tag.tag)
+          : [];
+
         await this.bookmarkService.createBookmark(
           item.resolved_title,
           item.resolved_url,
           item.excerpt,
-          item.tags ?? [],
+          tags,
           item.item_id
         );
         created++;
