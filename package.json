@@ -7,7 +7,8 @@
     "test": "bun test",
     "sync-pocket": "bun run src/cli/sync-pocket.ts",
     "auth-pocket": "bun run src/cli/auth-pocket.ts",
-    "start": "bun run --watch src/server.ts"
+    "start": "bun run --watch src/server.ts",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/bun": "latest"
