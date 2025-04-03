@@ -1,7 +1,7 @@
 import { expect, test, beforeAll, afterAll } from "bun:test";
-import { setupTestDb, teardownTestDb } from "./utils";
-import { BookmarkRepository } from "../repository";
-import type { Bookmark } from "../types";
+import { setupTestDb, teardownTestDb } from "../__tests__/utils";
+import { BookmarkRepository } from "./repository";
+import type { Bookmark } from "./types";
 
 const testBookmark: Bookmark = {
   id: "test-1",

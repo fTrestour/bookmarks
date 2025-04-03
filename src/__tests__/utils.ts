@@ -1,6 +1,6 @@
 import { mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { initDb } from "../db";
+import { initDb } from "../data/db";
 
 export async function setupTestDb() {
   const url = `file:./sqlite/test-${Date.now()}.sqlite`;
