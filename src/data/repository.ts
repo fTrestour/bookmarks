@@ -6,6 +6,7 @@ export class BookmarkRepository {
 
   async create(bookmark: Bookmark): Promise<void> {
     const now = new Date().toISOString();
+    const vectorArray = new Uint8Array(bookmark.vector);
 
     await this.db.execute({
       sql: `
@@ -21,7 +22,7 @@ export class BookmarkRepository {
         now,
         now,
         JSON.stringify(bookmark.tags),
-        bookmark.vector,
+        vectorArray,
       ],
     });
   }
@@ -43,7 +44,7 @@ export class BookmarkRepository {
       url: row.url as string,
       description: row.description as string,
       tags: JSON.parse(row.tags as string),
-      vector: new Uint8Array(row.vector as ArrayBuffer),
+      vector: Array.from(new Uint8Array(row.vector as ArrayBuffer)),
       created_at: new Date(row.created_at as string),
       updated_at: new Date(row.updated_at as string),
     };
@@ -60,16 +61,17 @@ export class BookmarkRepository {
       url: row.url as string,
       description: row.description as string,
       tags: JSON.parse(row.tags as string),
-      vector: new Uint8Array(row.vector as ArrayBuffer),
+      vector: Array.from(new Uint8Array(row.vector as ArrayBuffer)),
       created_at: new Date(row.created_at as string),
       updated_at: new Date(row.updated_at as string),
     }));
   }
 
   async searchByVector(
-    vector: Uint8Array,
+    vector: number[],
     limit: number = 10
   ): Promise<Bookmark[]> {
+    const vectorArray = new Uint8Array(vector);
     const result = await this.db.execute({
       sql: `
         WITH vector_scores AS (
@@ -89,7 +91,7 @@ export class BookmarkRepository {
         )
         SELECT * FROM vector_scores
       `,
-      args: [vector, limit],
+      args: [vectorArray, limit],
     });
 
     return result.rows.map((row) => ({
@@ -98,7 +100,7 @@ export class BookmarkRepository {
       url: row.url as string,
       description: row.description as string,
       tags: JSON.parse(row.tags as string),
-      vector: new Uint8Array(row.vector as ArrayBuffer),
+      vector: Array.from(new Uint8Array(row.vector as ArrayBuffer)),
       created_at: new Date(row.created_at as string),
       updated_at: new Date(row.updated_at as string),
     }));

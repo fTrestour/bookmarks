@@ -6,5 +6,5 @@ export interface Bookmark {
   created_at: Date;
   updated_at: Date;
   tags: string[];
-  vector: Uint8Array;
+  vector: number[];
 }

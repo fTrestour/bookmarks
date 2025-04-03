@@ -9,7 +9,7 @@ const testBookmark: Bookmark = {
   url: "https://example.com",
   description: "A test bookmark",
   tags: ["test", "example"],
-  vector: new Uint8Array([1, 2, 3, 4, 5]),
+  vector: [1, 2, 3, 4, 5],
   created_at: new Date(),
   updated_at: new Date(),
 };
@@ -52,7 +52,7 @@ test("find all bookmarks", async () => {
 });
 
 test("search by vector similarity", async () => {
-  const searchVector = new Uint8Array([1, 2, 3, 4, 5]);
+  const searchVector = [1, 2, 3, 4, 5];
   const results = await repository.searchByVector(searchVector);
   expect(results).toHaveLength(1);
   expect(results[0].id).toBe(testBookmark.id);
