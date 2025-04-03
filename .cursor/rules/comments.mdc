@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Keep comments minimal. Prefer descriptive variable names, and only add comment when intent can not be described properly using code or types.
