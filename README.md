@@ -3,6 +3,19 @@
 This project is a simple bookmark manager. It exposes an api to list and query bookmarks.
 It can be be plugged to various data sources, such as Pocket.
 
+## Environment Variables
+
+The following environment variables are used to configure the application:
+
+### Database
+
+- `DATABASE_URL`: The URL for the libsql database. Default format: `file:./sqlite/db.sqlite`
+
+### Embedding Service
+
+- `OPENAI_API_KEY`: Your OpenAI API key. When provided, the service will use OpenAI's text-embedding-3-large model.
+- `OLLAMA_BASE_URL`: The base URL for the Ollama API. Defaults to `http://localhost:11434`. Only used when `OPENAI_API_KEY` is not set.
+
 ## Architecture
 
 ### Database
@@ -28,8 +41,11 @@ A Pocket webhook will sync bookmarks from Pocket to the database.
 It will only sync bookmarks that are marked as favorite:
 
 - Generate a description using an LLM with the vercel AI SDK. Model and credentials are configurable with env variables
-- Compute an embedding for the description
-  Pocket credentials are configurable in env vars
+- Compute an embedding for the description using one of these providers:
+  - OpenAI's `text-embedding-3-large` model
+  - Ollama's `nomic-embed-text` model (fallback for local development, requires Ollama running locally)
+
+Pocket credentials are configurable in env vars
 
 ### Services
 
