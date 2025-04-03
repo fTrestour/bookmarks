@@ -3,6 +3,24 @@
 This project is a simple bookmark manager. It exposes an api to list and query bookmarks.
 It can be be plugged to various data sources, such as Pocket.
 
+## Setup
+
+1. Start Ollama server (required for local development):
+
+```bash
+ollama serve
+```
+
+2. Get Pocket credentials:
+   - Create a new app at https://getpocket.com/developer/apps/new
+   - Copy your consumer key
+   - Run the auth command to get an access token:
+   ```bash
+   bun run auth-pocket
+   ```
+   - Follow the instructions in the console to authorize the app
+   - Add the access token to your `.env` file
+
 ## Environment Variables
 
 The following environment variables are used to configure the application:
@@ -15,6 +33,11 @@ The following environment variables are used to configure the application:
 
 - `OPENAI_API_KEY`: Your OpenAI API key. When provided, the service will use OpenAI's text-embedding-3-large model.
 - `OLLAMA_BASE_URL`: The base URL for the Ollama API. Defaults to `http://localhost:11434`. Only used when `OPENAI_API_KEY` is not set.
+
+### Pocket
+
+- `POCKET_CONSUMER_KEY`: Your Pocket app's consumer key
+- `POCKET_ACCESS_TOKEN`: Your Pocket access token (obtained through the auth-pocket command)
 
 ## Architecture
 
