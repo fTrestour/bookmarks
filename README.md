@@ -39,6 +39,15 @@ The following environment variables are used to configure the application:
 - `POCKET_CONSUMER_KEY`: Your Pocket app's consumer key
 - `POCKET_ACCESS_TOKEN`: Your Pocket access token (obtained through the auth-pocket command)
 
+### Rate Limiting
+
+- `RATE_LIMIT_WINDOW_MS`: The time window for rate limiting in milliseconds. Defaults to 15 minutes (900000ms).
+- `RATE_LIMIT_MAX_REQUESTS`: The maximum number of requests allowed per window per IP. Defaults to 100.
+
+### Server
+
+- `PORT`: The port number the server will listen on. Required.
+
 ## Architecture
 
 ### Database
@@ -84,7 +93,15 @@ All services will be exposed to a CLI interface using Brocli
 
 #### API
 
-All routes are prefixed with `/api/v1`
+All routes are prefixed with `/api`
+
+Available endpoints:
+
+- `GET /api/bookmarks` - List all bookmarks
+- `GET /api/bookmarks?search=query&limit=10` - Search bookmarks using semantic search
+  - `search`: The search query (required for search)
+  - `limit`: Maximum number of results to return (optional, defaults to 10)
+- `GET /api/tags` - List all tags with their counts
 
 #### MCP server
 
@@ -96,4 +113,4 @@ As only readonly services are to be exposed, no specific security measures are i
 
 ## Rate limiting
 
-Env variables are exposed to control a global simple rate-limiting
+Rate limiting is optional and can be enabled by setting both `RATE_LIMIT_WINDOW_MS` and `RATE_LIMIT_MAX_REQUESTS` environment variables. When enabled, it limits the number of requests per IP address within a time window.

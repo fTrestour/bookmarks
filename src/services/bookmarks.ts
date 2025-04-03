@@ -30,15 +30,18 @@ export class BookmarksService {
     return bookmark;
   }
 
-  async listBookmarks(): Promise<Bookmark[]> {
-    return this.repository.findAll();
+  async listBookmarks() {
+    return (await this.repository.findAll()).map(
+      ({ vector, id, created_at, updated_at, source_id, ...bookmark }) =>
+        bookmark
+    );
   }
 
-  async searchBookmarks(
-    query: string,
-    limit: number = 10
-  ): Promise<Bookmark[]> {
+  async searchBookmarks(query: string, limit: number = 10) {
     const queryEmbedding = await generateEmbedding(query);
-    return this.repository.searchByVector(queryEmbedding, limit);
+    return (await this.repository.searchByVector(queryEmbedding, limit)).map(
+      ({ vector, id, created_at, updated_at, source_id, ...bookmark }) =>
+        bookmark
+    );
   }
 }
