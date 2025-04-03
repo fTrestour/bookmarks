@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+When testing avoid mocks as much as possible, prefer a modular implementation that allows to inject another implementation in a service.
