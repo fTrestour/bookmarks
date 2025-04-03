@@ -1,0 +1,19 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+All features that are implemented should be tested.
+Tests are collocated with the functions they test:
+
+Don't:
+```
+blabla.ts
+__tests__/blabla.test.ts
+```
+
+Do:
+```
+blabla.ts
+blabla.test.ts
+```
