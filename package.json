@@ -20,9 +20,11 @@
     "@libsql/client": "^0.15.2",
     "@types/express": "^5.0.1",
     "@types/express-rate-limit": "^6.0.2",
+    "@types/node-cron": "^3.0.11",
     "ai": "^4.2.10",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
+    "node-cron": "^3.0.3",
     "ollama-ai-provider": "^1.2.0"
   }
 }

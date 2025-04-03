@@ -38,6 +38,7 @@ The following environment variables are used to configure the application:
 
 - `POCKET_CONSUMER_KEY`: Your Pocket app's consumer key
 - `POCKET_ACCESS_TOKEN`: Your Pocket access token (obtained through the auth-pocket command)
+- `POCKET_SYNC_CRON`: Cron expression for Pocket sync schedule. Defaults to "0 \* \* \* \*" (every hour)
 
 ### Rate Limiting
 
@@ -57,6 +58,7 @@ Tables are:
 
 - `bookmarks`: A table to store bookmarks.
   - `id`: The uuid of the bookmark.
+  - `source_id`: The ID from the source (e.g. Pocket item ID).
   - `title`: The title of the bookmark.
   - `url`: The url of the bookmark.
   - `description`: The description of the bookmark.
@@ -69,15 +71,15 @@ Tables are:
 
 #### Pocket
 
-A Pocket webhook will sync bookmarks from Pocket to the database.
-It will only sync bookmarks that are marked as favorite:
+Pocket bookmarks are synced periodically using a cron job:
 
+- Only syncs bookmarks that are marked as favorite
 - Generate a description using an LLM with the vercel AI SDK. Model and credentials are configurable with env variables
 - Compute an embedding for the description using one of these providers:
   - OpenAI's `text-embedding-3-large` model
   - Ollama's `nomic-embed-text` model (fallback for local development, requires Ollama running locally)
 
-Pocket credentials are configurable in env vars
+Pocket credentials and sync schedule are configurable in env vars
 
 ### Services
 

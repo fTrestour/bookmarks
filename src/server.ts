@@ -8,6 +8,8 @@ import { BookmarkRepository } from "./data/repository";
 import { BookmarksService } from "./services/bookmarks";
 import { TagsService } from "./services/tags";
 import { rateLimit } from "express-rate-limit";
+import cron from "node-cron";
+import { PocketService } from "./third-parties/pocket";
 
 const app = express();
 app.use(express.json());
@@ -46,6 +48,42 @@ const db = await initDb(process.env.DATABASE_URL);
 const repository = new BookmarkRepository(db);
 const bookmarksService = new BookmarksService(repository);
 const tagsService = new TagsService(repository);
+
+// Setup Pocket sync if credentials are provided
+if (!process.env.POCKET_CONSUMER_KEY) {
+  throw new Error("POCKET_CONSUMER_KEY is not set");
+}
+
+if (!process.env.POCKET_ACCESS_TOKEN) {
+  throw new Error("POCKET_ACCESS_TOKEN is not set");
+}
+
+const pocketService = new PocketService(
+  bookmarksService,
+  process.env.POCKET_CONSUMER_KEY,
+  process.env.POCKET_ACCESS_TOKEN
+);
+
+if (!process.env.POCKET_SYNC_CRON) {
+  throw new Error("POCKET_SYNC_CRON is not set");
+}
+
+const syncCron = process.env.POCKET_SYNC_CRON;
+
+const sync = async () => {
+  try {
+    console.log("Starting Pocket sync...");
+    const created = await pocketService.syncFavorites();
+    console.log(`Pocket sync completed. Created ${created} bookmarks.`);
+  } catch (error) {
+    console.error("Error during Pocket sync:", error);
+  }
+};
+
+await sync();
+cron.schedule(syncCron, sync);
+
+console.log(`Pocket sync scheduled with cron: ${syncCron}`);
 
 const api = express.Router();
 
