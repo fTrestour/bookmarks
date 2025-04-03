@@ -74,7 +74,6 @@ Tables are:
 Pocket bookmarks are synced periodically using a cron job:
 
 - Only syncs bookmarks that are marked as favorite
-- Generate a description using an LLM with the vercel AI SDK. Model and credentials are configurable with env variables
 - Compute an embedding for the description using one of these providers:
   - OpenAI's `text-embedding-3-large` model
   - Ollama's `nomic-embed-text` model (fallback for local development, requires Ollama running locally)
@@ -89,10 +88,6 @@ Pocket credentials and sync schedule are configurable in env vars
 
 ### Interfaces
 
-#### CLI
-
-All services will be exposed to a CLI interface using Brocli
-
 #### API
 
 All routes are prefixed with `/api`
@@ -100,14 +95,20 @@ All routes are prefixed with `/api`
 Available endpoints:
 
 - `GET /api/bookmarks` - List all bookmarks
+  ```json
+  [
+    {
+      "title": "Example Bookmark",
+      "url": "https://example.com",
+      "description": "A description of the bookmark",
+      "tags": ["tag1", "tag2"]
+    }
+  ]
+  ```
 - `GET /api/bookmarks?search=query&limit=10` - Search bookmarks using semantic search
   - `search`: The search query (required for search)
   - `limit`: Maximum number of results to return (optional, defaults to 10)
 - `GET /api/tags` - List all tags with their counts
-
-#### MCP server
-
-All services will be exposed as an SSE powered MCP server.
 
 ## Authentication
 
@@ -116,3 +117,7 @@ As only readonly services are to be exposed, no specific security measures are i
 ## Rate limiting
 
 Rate limiting is optional and can be enabled by setting both `RATE_LIMIT_WINDOW_MS` and `RATE_LIMIT_MAX_REQUESTS` environment variables. When enabled, it limits the number of requests per IP address within a time window.
+
+# TODO
+
+- [ ] Add an SSE powered MCP server to expose the resources
