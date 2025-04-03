@@ -49,6 +49,22 @@ The following environment variables are used to configure the application:
 
 - `PORT`: The port number the server will listen on. Required.
 
+### Logging
+
+- `NODE_ENV`: The environment the application is running in. When set to 'development', debug logs will be enabled.
+- Logs are written to:
+  - Console (all environments)
+  - `logs/error.log` (error level and above)
+  - `logs/combined.log` (all levels)
+
+Available log levels:
+
+- `error`: For errors that need immediate attention
+- `warn`: For potentially harmful situations
+- `info`: For general operational information
+- `http`: For HTTP request logging
+- `debug`: For detailed information useful during development
+
 ## Architecture
 
 ### Database

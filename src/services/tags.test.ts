@@ -2,7 +2,7 @@ import { test, expect, describe, beforeEach, afterEach } from "bun:test";
 import { TagsService } from "./tags";
 import { BookmarksService } from "./bookmarks";
 import { BookmarkRepository } from "../data/repository";
-import { setupTestDb, teardownTestDb } from "../__tests__/utils";
+import { setupTestDb, teardownTestDb } from "../tests/utils";
 
 describe("TagsService", () => {
   let tagsService: TagsService;

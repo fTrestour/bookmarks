@@ -10,9 +10,15 @@ import { TagsService } from "./services/tags";
 import { rateLimit } from "express-rate-limit";
 import cron from "node-cron";
 import { PocketService } from "./third-parties/pocket";
+import logger from "./logger";
 
 const app = express();
 app.use(express.json());
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  logger.http(`${req.method} ${req.url}`);
+  next();
+});
 
 if (process.env.RATE_LIMIT_WINDOW_MS || process.env.RATE_LIMIT_MAX_REQUESTS) {
   if (!process.env.RATE_LIMIT_WINDOW_MS) {
@@ -36,7 +42,7 @@ if (process.env.RATE_LIMIT_WINDOW_MS || process.env.RATE_LIMIT_MAX_REQUESTS) {
   });
   app.use(limiter);
 } else {
-  console.warn(
+  logger.warn(
     "Rate limiting is not enabled, set RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX_REQUESTS to enable"
   );
 }
@@ -72,18 +78,18 @@ const syncCron = process.env.POCKET_SYNC_CRON;
 
 const sync = async () => {
   try {
-    console.log("Starting Pocket sync...");
+    logger.info("Starting Pocket sync...");
     const created = await pocketService.syncFavorites();
-    console.log(`Pocket sync completed. Created ${created} bookmarks.`);
+    logger.info(`Pocket sync completed. Created ${created} bookmarks.`);
   } catch (error) {
-    console.error("Error during Pocket sync:", error);
+    logger.error("Error during Pocket sync:", error);
   }
 };
 
 await sync();
 cron.schedule(syncCron, sync);
 
-console.log(`Pocket sync scheduled with cron: ${syncCron}`);
+logger.info(`Pocket sync scheduled with cron: ${syncCron}`);
 
 const api = express.Router();
 
@@ -93,6 +99,7 @@ api.get("/bookmarks", async (req: Request, res: Response) => {
 
     if (search) {
       if (typeof search !== "string") {
+        logger.warn("Invalid search parameter type received");
         res
           .status(400)
           .json({ error: "Query parameter 'search' must be a string" });
@@ -111,7 +118,7 @@ api.get("/bookmarks", async (req: Request, res: Response) => {
     const bookmarks = await bookmarksService.listBookmarks();
     res.json(bookmarks);
   } catch (error) {
-    console.error("Error handling bookmarks:", error);
+    logger.error("Error handling bookmarks:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -121,7 +128,7 @@ api.get("/tags", async (req: Request, res: Response) => {
     const tags = await tagsService.listTags();
     res.json(tags);
   } catch (error) {
-    console.error("Error listing tags:", error);
+    logger.error("Error listing tags:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -129,8 +136,8 @@ api.get("/tags", async (req: Request, res: Response) => {
 app.use("/api", api);
 
 // Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error(err.stack);
+api.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  logger.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
 });
 
@@ -140,5 +147,5 @@ if (!process.env.PORT) {
 const port = parseInt(process.env.PORT, 10);
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  logger.info(`Server running on port ${port}`);
 });

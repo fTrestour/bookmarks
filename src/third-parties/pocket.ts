@@ -1,4 +1,5 @@
 import { BookmarksService } from "../services/bookmarks";
+import logger from "../logger";
 
 interface PocketItem {
   item_id: string;
@@ -45,11 +46,13 @@ export class PocketService {
       });
 
       if (!response.ok) {
+        logger.error(`Failed to fetch from Pocket: ${response.statusText}`);
         throw new Error(`Failed to fetch from Pocket: ${response.statusText}`);
       }
 
       const data = (await response.json()) as PocketResponse;
       if (data.error) {
+        logger.error(`Pocket API error: ${data.error}`);
         throw new Error(`Pocket API error: ${data.error}`);
       }
 
@@ -87,11 +90,11 @@ export class PocketService {
             "UNIQUE constraint failed: bookmarks.source_id"
           )
         ) {
-          console.log(
+          logger.info(
             `Bookmark "${item.resolved_title}" already exists, skipping...`
           );
         } else {
-          console.error(
+          logger.error(
             `Failed to process bookmark ${item.resolved_title}:`,
             error
           );
