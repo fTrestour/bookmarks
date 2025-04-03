@@ -55,14 +55,27 @@ export class PocketService {
           item.resolved_title,
           item.resolved_url,
           item.excerpt,
-          item.tags ?? []
+          item.tags ?? [],
+          item.item_id
         );
         created++;
       } catch (error) {
-        console.error(
-          `Failed to process bookmark ${item.resolved_title}:`,
-          error
-        );
+        if (
+          // FIXME: The predicate seems a bit brittle
+          error instanceof Error &&
+          error.message.includes(
+            "UNIQUE constraint failed: bookmarks.source_id"
+          )
+        ) {
+          console.log(
+            `Bookmark "${item.resolved_title}" already exists, skipping...`
+          );
+        } else {
+          console.error(
+            `Failed to process bookmark ${item.resolved_title}:`,
+            error
+          );
+        }
       }
     }
 

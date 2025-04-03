@@ -25,7 +25,8 @@ describe("BookmarksService", () => {
         "Test Bookmark",
         "http://test.com",
         "A test bookmark about programming",
-        ["test", "programming"]
+        ["test", "programming"],
+        "test-source-1"
       );
 
       expect(bookmark).toMatchObject({
@@ -33,6 +34,7 @@ describe("BookmarksService", () => {
         url: "http://test.com",
         description: "A test bookmark about programming",
         tags: ["test", "programming"],
+        source_id: "test-source-1",
       });
       expect(bookmark.id).toBeDefined();
       expect(bookmark.created_at).toBeInstanceOf(Date);
@@ -48,6 +50,7 @@ describe("BookmarksService", () => {
         description: bookmark.description,
         tags: bookmark.tags,
         id: bookmark.id,
+        source_id: bookmark.source_id,
       });
     });
   });
@@ -59,14 +62,16 @@ describe("BookmarksService", () => {
         "First Bookmark",
         "http://first.com",
         "First bookmark",
-        ["test"]
+        ["test"],
+        "test-source-1"
       );
 
       const second = await service.createBookmark(
         "Second Bookmark",
         "http://second.com",
         "Second bookmark",
-        ["test"]
+        ["test"],
+        "test-source-2"
       );
 
       const result = await service.listBookmarks();
@@ -84,14 +89,16 @@ describe("BookmarksService", () => {
         "Programming Book",
         "http://programming.com",
         "A comprehensive guide to TypeScript development, covering advanced topics in web programming",
-        ["programming"]
+        ["programming"],
+        "test-source-3"
       );
 
       const cooking = await service.createBookmark(
         "Cooking Book",
         "http://cooking.com",
         "A complete guide to Italian cuisine, with recipes for pasta, pizza, and traditional dishes",
-        ["cooking"]
+        ["cooking"],
+        "test-source-4"
       );
 
       const result = await service.searchBookmarks("TypeScript development");
@@ -116,7 +123,8 @@ describe("BookmarksService", () => {
             `Bookmark ${i}`,
             `http://bookmark${i}.com`,
             `Description ${i}`,
-            ["test"]
+            ["test"],
+            `test-source-${i}`
           )
         )
       );

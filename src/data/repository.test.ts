@@ -5,6 +5,7 @@ import type { Bookmark } from "./types";
 
 const testBookmark: Bookmark = {
   id: "test-1",
+  source_id: "pocket-123",
   title: "Test Bookmark",
   url: "https://example.com",
   description: "A test bookmark",
@@ -32,6 +33,7 @@ test("create bookmark", async () => {
   const bookmark = await repository.findById(testBookmark.id);
   expect(bookmark).toBeDefined();
   expect(bookmark?.id).toBe(testBookmark.id);
+  expect(bookmark?.source_id).toBe(testBookmark.source_id);
   expect(bookmark?.title).toBe(testBookmark.title);
   expect(bookmark?.url).toBe(testBookmark.url);
   expect(bookmark?.description).toBe(testBookmark.description);

@@ -10,11 +10,13 @@ export class BookmarksService {
     title: string,
     url: string,
     description: string,
-    tags: string[] = []
+    tags: string[],
+    source_id: string
   ): Promise<Bookmark> {
     const vector = await generateEmbedding(description);
     const bookmark: Bookmark = {
       id: randomUUID(),
+      source_id,
       title,
       url,
       description,

@@ -11,11 +11,12 @@ export class BookmarkRepository {
     await this.db.execute({
       sql: `
         INSERT INTO bookmarks (
-          id, title, url, description, created_at, updated_at, tags, vector
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          id, source_id, title, url, description, created_at, updated_at, tags, vector
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
         bookmark.id,
+        bookmark.source_id,
         bookmark.title,
         bookmark.url,
         bookmark.description,
@@ -40,6 +41,7 @@ export class BookmarkRepository {
     const row = result.rows[0];
     return {
       id: row.id as string,
+      source_id: row.source_id as string,
       title: row.title as string,
       url: row.url as string,
       description: row.description as string,
@@ -57,6 +59,7 @@ export class BookmarkRepository {
 
     return result.rows.map((row) => ({
       id: row.id as string,
+      source_id: row.source_id as string,
       title: row.title as string,
       url: row.url as string,
       description: row.description as string,
@@ -96,6 +99,7 @@ export class BookmarkRepository {
 
     return result.rows.map((row) => ({
       id: row.id as string,
+      source_id: row.source_id as string,
       title: row.title as string,
       url: row.url as string,
       description: row.description as string,

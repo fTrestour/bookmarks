@@ -5,6 +5,7 @@ export async function initDb(url: string) {
   await database.execute(`
     CREATE TABLE IF NOT EXISTS bookmarks (
       id TEXT PRIMARY KEY,
+      source_id TEXT UNIQUE,
       title TEXT NOT NULL,
       url TEXT NOT NULL,
       description TEXT,
