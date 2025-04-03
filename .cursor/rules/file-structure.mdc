@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You should use the followinf file structure:
+/
+├── src/                    # Main source code
+│   ├── services/          # Core business logic
+│   │   ├── bookmarks.ts   # Bookmark management service
+│   │   ├── embedding.ts   # Vector embedding generation
+│   │   └── tags.ts        # Tag management service
+│   ├── data/             # Data layer
+│   │   ├── db.ts         # Database initialization
+│   │   ├── repository.ts # Bookmark repository
+│   │   └── types.ts      # Type definitions
+│   ├── cli/              # Command-line interface
+│   │   └── auth-pocket.ts # Pocket authentication
+│   ├── controllers/      # API controllers
+│   ├── third-parties/    # External service integrations
+│   └── __tests__/        # Shared test utilities
+├── sqlite/               # Database files
+└── .cursor/             # Project rules and conventions
