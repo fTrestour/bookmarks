@@ -52,7 +52,6 @@ Pocket credentials are configurable in env vars
 - List all bookmarks
 - Semantic search in the bookmarks with a query string
 - List all tags with number of bookmarks associated
-- Semantic search of tag
 
 ### Interfaces
 
