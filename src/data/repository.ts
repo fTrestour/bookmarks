@@ -74,16 +74,16 @@ export class BookmarkRepository {
       sql: `
         WITH vector_scores AS (
           SELECT 
-            id,
-            title,
-            url,
-            description,
-            tags,
-            vector,
-            created_at,
-            updated_at,
-            1 - vector_distance_cos(vector, vector32(?)) AS similarity
-          FROM bookmarks
+            b.id,
+            b.title,
+            b.url,
+            b.description,
+            b.tags,
+            b.vector,
+            b.created_at,
+            b.updated_at,
+            1 - vector_distance_cos(vector32(b.vector), vector32(?)) AS similarity
+          FROM bookmarks b
           ORDER BY similarity DESC
           LIMIT ?
         )
@@ -107,8 +107,8 @@ export class BookmarkRepository {
   async getAllTags(): Promise<{ tag: string; count: number }[]> {
     const result = await this.db.execute(`
       WITH RECURSIVE split_tags AS (
-        SELECT id, json_each.value as tag
-        FROM bookmarks, json_each(tags)
+        SELECT b.id as bookmark_id, json_each.value as tag
+        FROM bookmarks b, json_each(b.tags)
       )
       SELECT tag, COUNT(*) as count
       FROM split_tags
