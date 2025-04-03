@@ -3,6 +3,7 @@ import express, {
   type Response,
   type NextFunction,
 } from "express";
+import cors from "cors";
 import { initDb } from "./data/db";
 import { BookmarkRepository } from "./data/repository";
 import { BookmarksService } from "./services/bookmarks";
@@ -13,6 +14,7 @@ import { PocketService } from "./third-parties/pocket";
 import logger from "./logger";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use((req: Request, res: Response, next: NextFunction) => {
