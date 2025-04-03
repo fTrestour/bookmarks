@@ -15,10 +15,9 @@ function getEmbeddingModel() {
 }
 
 export async function generateEmbedding(value: string): Promise<number[]> {
-  const input = value.replaceAll("\\n", " ");
   const { embedding } = await embed({
     model: getEmbeddingModel(),
-    value: input,
+    value,
   });
   return embedding;
 }
@@ -26,6 +25,10 @@ export async function generateEmbedding(value: string): Promise<number[]> {
 export async function generateEmbeddings(
   values: string[]
 ): Promise<number[][]> {
+  if (values.length === 0) {
+    return [];
+  }
+
   const { embeddings } = await embedMany({
     model: getEmbeddingModel(),
     values,
