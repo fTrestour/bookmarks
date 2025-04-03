@@ -22,8 +22,16 @@ jobs:
     - name: Check types
       run: bun run typecheck
 
+    - name: Start Ollama container
+      run: |
+        docker run -d --name ollama -p 11434:11434 ollama/ollama
+        docker exec ollama ollama pull nomic-embed-text
+
     - name: Run tests
       run: bun test
+
+    - name: Stop Ollama container
+      run: docker rm -f ollama
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
