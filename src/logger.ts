@@ -31,15 +31,8 @@ const logger = winston.createLogger({
   levels,
   format,
   transports: [
-    // Write all logs to console
+    // TODO: Consider other transports
     new winston.transports.Console(),
-    // Write all logs error (and above) to error.log
-    new winston.transports.File({
-      filename: "logs/error.log",
-      level: "error",
-    }),
-    // Write all logs to combined.log
-    new winston.transports.File({ filename: "logs/combined.log" }),
   ],
 });
 

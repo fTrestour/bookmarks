@@ -54,10 +54,6 @@ The following environment variables are used to configure the application:
 ### Logging
 
 - `NODE_ENV`: The environment the application is running in. When set to 'development', debug logs will be enabled.
-- Logs are written to:
-  - Console (all environments)
-  - `logs/error.log` (error level and above)
-  - `logs/combined.log` (all levels)
 
 Available log levels:
 
