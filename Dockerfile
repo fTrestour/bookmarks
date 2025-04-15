@@ -1,5 +1,6 @@
 FROM oven/bun:1.0.25-slim
 
+ARG NODE_ENV=production
 ARG PORT=3000
 ARG POCKET_SYNC_CRON="0 * * * *"    
 ARG RATE_LIMIT_WINDOW_MS=900000
