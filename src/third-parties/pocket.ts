@@ -8,6 +8,7 @@ interface PocketItem {
   excerpt: string;
   time_added: string;
   tags?: Record<string, { tag: string }>;
+  status?: string;
 }
 
 interface PocketResponse {
@@ -22,7 +23,7 @@ export class PocketService {
     private bookmarkService: BookmarksService,
     private consumerKey: string,
     private accessToken: string
-  ) {}
+  ) { }
 
   async syncFavorites(): Promise<number> {
     let bookmarks = new Array<PocketItem>();
@@ -57,7 +58,7 @@ export class PocketService {
       }
 
       const items = Object.values(data.list);
-      bookmarks.push(...items);
+      bookmarks.push(...items.filter(item => item.status !== "2"));
 
       if (items.length < 30) {
         fetchMore = false;
@@ -93,11 +94,17 @@ export class PocketService {
           logger.info(
             `Bookmark "${item.resolved_title}" already exists, skipping...`
           );
-        } else {
+        } else if (item.resolved_title) {
           logger.error(
             `Failed to process bookmark ${item.resolved_title}:`,
             error
           );
+        } else {
+          logger.error(
+            `Failed to process bookmark:`,
+            error
+          );
+          console.error(item);
         }
       }
     }
