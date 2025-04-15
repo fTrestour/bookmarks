@@ -1,6 +1,6 @@
 # bookmarks
 
-[![Deploy](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml)
+[![Build](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml)
 
 This project is a simple bookmark manager. It exposes an api to list and query bookmarks.
 It can be be plugged to various data sources, such as Pocket.
