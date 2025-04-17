@@ -30,12 +30,4 @@ EXPOSE $PORT
 # Create volume for database
 VOLUME ["/var/db"]
 
-RUN addgroup --system appgroup && \
-    adduser --system --ingroup appgroup appuser
-
-RUN mkdir -p /var/db && \
-    chown -R appuser:appgroup /var/db
-
-USER appuser
-
 CMD ["bun", "run", "src/server.ts"]
