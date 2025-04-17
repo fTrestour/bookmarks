@@ -7,8 +7,10 @@
     "test": "bun test",
     "sync-pocket": "bun run src/cli/sync-pocket.ts",
     "auth-pocket": "bun run src/cli/auth-pocket.ts",
-    "start": "bun run --watch src/server.ts",
-    "typecheck": "tsc --noEmit"
+    "start": "bun run src/server.ts",
+    "dev": "bun run --watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "inspect": "npx @modelcontextprotocol/inspector"
   },
   "devDependencies": {
     "@types/bun": "latest"
