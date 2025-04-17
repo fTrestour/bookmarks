@@ -7,6 +7,7 @@ import logger from "./logger";
 import { BookmarksService } from "./services/bookmarks";
 import { TagsService } from "./services/tags";
 import { PocketService } from "./third-parties/pocket";
+import { createMcp } from "./mcp-server";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
@@ -58,6 +59,7 @@ const port = parseInt(process.env.PORT, 10);
 const app = express();
 
 app.use("/api", createApi({ bookmarksService, tagsService }));
+app.use("/mcp", createMcp({ bookmarksService, tagsService }));
 
 app.listen(port, () => {
   logger.info(`Server running on port ${port}`);
