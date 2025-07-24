@@ -8,3 +8,9 @@ export function initDb() {
 
   return db;
 }
+
+export async function createTables(): Promise<void> {
+  const db = initDb();
+  
+  await db.exec("CREATE TABLE bookmarks (id TEXT PRIMARY KEY, url TEXT)");
+}
