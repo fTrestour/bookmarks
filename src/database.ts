@@ -1,6 +1,6 @@
 import Database from "libsql/promise";
 import { getConfig } from "./config.ts";
-import { bookmarkSchema, type Bookmark } from "./types.ts";
+import { bookmarksSchema, parse, type Bookmark } from "./types.ts";
 
 export function initDb() {
   const { dbUri } = getConfig();
@@ -21,6 +21,6 @@ export async function getAllBookmarks(): Promise<Bookmark[]> {
 
   const result = await db.exec("SELECT id, url FROM bookmarks");
 
-  // Validate and parse each row using the schema
-  return result.map((row: any) => bookmarkSchema.parse(row));
+  // Validate and parse the result using the bookmarks schema
+  return parse(bookmarksSchema, result);
 }
