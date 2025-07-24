@@ -3,10 +3,12 @@ import { server } from "./server.ts";
 import { vi } from "vitest";
 import * as database from "./database";
 import * as config from "./config";
+import * as scrapper from "./scrapper";
 import { randomUUID } from "crypto";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
+  const getPageContentSpy = vi.spyOn(scrapper, "getPageContent");
 
   beforeEach(() => {
     getConfigSpy.mockReset().mockReturnValue({
@@ -16,6 +18,8 @@ describe("api", () => {
       dbUri: ":memory:",
       scrappingAiModel: "gpt-4o-mini",
     });
+    
+    getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
   });
 
   it("accepts calls on /", async () => {
