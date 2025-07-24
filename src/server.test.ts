@@ -60,4 +60,22 @@ describe("api", () => {
     const bookmarks = await database.getAllBookmarks();
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining([url]));
   });
+
+  it("creates multiple bookmarks on POST /bookmarks/batch", async () => {
+    const urls = [
+      "https://batch-example1.org/" + randomUUID(),
+      "https://batch-example2.org/" + randomUUID(),
+    ];
+    const response = await server.inject({
+      method: "POST",
+      url: "/bookmarks/batch",
+      payload: urls.map((url) => ({ url })),
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ success: true });
+
+    const bookmarks = await database.getAllBookmarks();
+    expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
+  });
 });
