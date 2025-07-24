@@ -23,5 +23,5 @@ export async function getAllBookmarks(): Promise<Bookmark[]> {
   const result = await stmt.all();
   
   // Validate and parse each row using the schema
-  return result.map(row => bookmarkSchema.parse(row));
+  return result.map((row: any) => bookmarkSchema.parse(row));
 }
