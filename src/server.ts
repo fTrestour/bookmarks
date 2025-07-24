@@ -1,4 +1,5 @@
 import fastify from 'fastify';
+import { getConfig } from './config';
 
 export const server = fastify({ logger: true });
 
@@ -10,8 +11,7 @@ server.get('/', async (request, reply) => {
 // Start the server
 const start = async () => {
   try {
-    const port = Number(process.env.PORT) || 3000;
-    const baseUrl = process.env.BASE_URL || 'localhost';
+    const { port, baseUrl } = getConfig();
     await server.listen({ port });
     console.log(`Server listening on http://${baseUrl}:${port}`);
   } catch (err) {
