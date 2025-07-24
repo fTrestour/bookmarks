@@ -18,10 +18,7 @@
     "url": "git+https://github.com/fTrestour/bookmarks.git"
   },
   "author": "fTrestour",
-  "bugs": {
-    "url": "https://github.com/fTrestour/bookmarks/issues"
-  },
-  "homepage": "https://github.com/fTrestour/bookmarks#readme",
+  "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.31.0",
     "@types/node": "^22.13.10",
