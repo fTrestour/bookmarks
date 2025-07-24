@@ -23,12 +23,12 @@ describe("api", () => {
   });
 
   it("returns bookmarks on /bookmarks", async () => {
-    const mockBookmarks = [
+    const testBookmarks = [
       { id: "1", url: "https://example.com" },
       { id: "2", url: "https://google.com" },
     ];
 
-    vi.spyOn(database, "getAllBookmarks").mockResolvedValue(mockBookmarks);
+    await database.insertBookmarks(testBookmarks);
 
     const response = await server.inject({
       method: "GET",
@@ -36,6 +36,6 @@ describe("api", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual(mockBookmarks);
+    expect(JSON.parse(response.body)).toEqual(testBookmarks);
   });
 });

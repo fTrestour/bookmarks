@@ -16,6 +16,14 @@ export async function createTables(): Promise<void> {
   await db.exec("CREATE TABLE bookmarks (id TEXT PRIMARY KEY, url TEXT)");
 }
 
+export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
+  const db = initDb();
+
+  for (const bookmark of bookmarks) {
+    await db.exec("INSERT INTO bookmarks (id, url) VALUES (?, ?)", [bookmark.id, bookmark.url]);
+  }
+}
+
 export async function getAllBookmarks(): Promise<Bookmark[]> {
   const db = initDb();
 
