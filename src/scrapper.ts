@@ -1,4 +1,6 @@
 import { chromium } from "playwright";
+import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
 
 export async function getPageContent(url: string): Promise<string> {
   const browser = await chromium.launch();
@@ -6,5 +8,14 @@ export async function getPageContent(url: string): Promise<string> {
   await page.goto(url);
   const content = await page.content();
   await browser.close();
-  return content;
+
+  const { text } = await generateText({
+    model: openai("gpt-4o-mini"),
+    prompt: `Please convert the following HTML content into clean, well-formatted markdown. Focus on the main content and ignore navigation, ads, and other peripheral elements. Preserve the structure and hierarchy of the content.
+
+HTML content:
+${content}`,
+  });
+
+  return text;
 }
