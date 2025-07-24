@@ -1,5 +1,5 @@
 import Database from "libsql/promise";
-import { getConfig } from "./config";
+import { getConfig } from "./config.ts";
 import { Bookmark } from "./types";
 
 export function initDb() {
