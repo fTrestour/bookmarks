@@ -7,7 +7,7 @@ import * as config from "./config";
 describe("api", () => {
   vi.spyOn(config, "getConfig").mockReturnValue({
     port: 3000,
-    baseUrl: "http://localhost",
+    baseUrl: "localhost",
     env: "test",
     dbUri: ":memory:",
   });

@@ -32,8 +32,8 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.10",
     "fastify": "^5.4.0",
-    "libsql": "^0.5.17",
     "zod": "^4.0.8"
   },
   "lint-staged": {

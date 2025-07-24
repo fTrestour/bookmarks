@@ -1,41 +1,51 @@
-import Database from "libsql/promise";
 import { getConfig } from "./config.ts";
 import { bookmarksSchema, parse, type Bookmark } from "./types.ts";
+import { type Client, createClient, type ResultSet } from "@libsql/client";
 
-export async function initDb() {
+let db: Client | null = null;
+async function getDb() {
+  if (db) {
+    return db;
+  }
+
   const { dbUri } = getConfig();
 
-  const db = new Database(dbUri, { async: true });
+  const newDb = createClient({ url: dbUri });
+  await newDb.execute(
+    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE)",
+  );
 
-  await createTables();
+  db = newDb;
 
   return db;
 }
 
-export async function createTables(): Promise<void> {
-  const { dbUri } = getConfig();
-  const db = new Database(dbUri, { async: true });
+export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
+  const db = await getDb();
 
-  await db.exec(
-    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE)",
+  await db.batch(
+    bookmarks.map((bookmark) => ({
+      sql: `INSERT INTO bookmarks (id, url) VALUES (?, ?)`,
+      args: [bookmark.id, bookmark.url],
+    })),
+    "write",
   );
 }
 
-export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
-  const db = await initDb();
+export async function getAllBookmarks(): Promise<Bookmark[]> {
+  const db = await getDb();
 
-  for (const bookmark of bookmarks) {
-    await db.exec(
-      `INSERT INTO bookmarks (id, url) VALUES ('${bookmark.id}', '${bookmark.url}')`,
-    );
-  }
+  const result = await db.execute({
+    sql: "SELECT * FROM bookmarks",
+  });
+  return parse(bookmarksSchema, toObject(result));
 }
 
-export async function getAllBookmarks(): Promise<Bookmark[]> {
-  const db = await initDb();
-
-  const result = await db.exec("SELECT id, url FROM bookmarks");
-
-  // Validate and parse the result using the bookmarks schema
-  return parse(bookmarksSchema, result);
+function toObject({ columns, rows }: ResultSet) {
+  return rows.map((row) =>
+    columns.reduce(
+      (acc, column, index) => ({ ...acc, [column]: row[index] }),
+      {},
+    ),
+  );
 }
