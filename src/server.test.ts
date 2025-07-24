@@ -28,7 +28,6 @@ describe("api", () => {
       { id: "2", url: "https://google.com" },
     ];
 
-    await database.createTables();
     await database.insertBookmarks(testBookmarks);
 
     const response = await server.inject({
