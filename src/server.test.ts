@@ -1,14 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import fastify from 'fastify';
+import { server } from './server';
 
 describe('api', () => {
   it('accepts calls on /', async () => {
-    const server = fastify({ logger: false });
-
-    server.get('/', async (request, reply) => {
-      return '👋';
-    });
-
     const response = await server.inject({
       method: 'GET',
       url: '/'

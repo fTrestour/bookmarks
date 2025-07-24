@@ -1,6 +1,6 @@
 import fastify from 'fastify';
 
-const server = fastify({ logger: true });
+export const server = fastify({ logger: true });
 
 // Add a root route that returns a wave emoji
 server.get('/', async (request, reply) => {
