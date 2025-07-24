@@ -18,7 +18,7 @@ describe("api", () => {
       dbUri: ":memory:",
       scrappingAiModel: "gpt-4o-mini",
     });
-    
+
     getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
   });
 
