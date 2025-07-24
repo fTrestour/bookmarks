@@ -20,7 +20,9 @@ export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
   const db = initDb();
 
   for (const bookmark of bookmarks) {
-    await db.exec(`INSERT INTO bookmarks (id, url) VALUES ('${bookmark.id}', '${bookmark.url}')`);
+    await db.exec(
+      `INSERT INTO bookmarks (id, url) VALUES ('${bookmark.id}', '${bookmark.url}')`,
+    );
   }
 }
 
