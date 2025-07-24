@@ -5,4 +5,10 @@ export const bookmarkSchema = z.object({
   url: z.string(),
 });
 
+export const bookmarksSchema = z.array(bookmarkSchema);
+
 export type Bookmark = z.infer<typeof bookmarkSchema>;
+
+export function parse<T>(schema: z.ZodSchema<T>, data: unknown): T {
+  return schema.parse(data);
+}
