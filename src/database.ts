@@ -25,7 +25,7 @@ export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
 
   await db.batch(
     bookmarks.map((bookmark) => ({
-      sql: `INSERT INTO bookmarks (id, url, content, embedding) VALUES (?, ?, ?, ?)`,
+      sql: `INSERT INTO bookmarks (id, url, content, embedding) VALUES (?, ?, ?, vector32(?))`,
       args: [
         bookmark.id,
         bookmark.url,
