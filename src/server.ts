@@ -14,4 +14,3 @@ server.get("/bookmarks", async () => {
   const bookmarks = await getAllBookmarks();
   return bookmarks;
 });
-
