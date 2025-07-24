@@ -14,6 +14,7 @@ describe("api", () => {
       baseUrl: "localhost",
       env: "test",
       dbUri: ":memory:",
+      aiModel: "gpt-4o-mini",
     });
   });
 
