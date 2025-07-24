@@ -11,6 +11,7 @@ describe("api", () => {
     env: "test",
     dbUri: ":memory:",
   });
+
   it("accepts calls on /", async () => {
     const response = await server.inject({
       method: "GET",
