@@ -9,5 +9,7 @@ export async function getBookmarkDataFromUrl(url: string): Promise<Bookmark> {
   return {
     id: randomUUID(),
     url: url,
+    content: content,
+    embedding: [], // TODO: Generate actual embedding
   };
 }
