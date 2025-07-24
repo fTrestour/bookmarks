@@ -19,6 +19,7 @@ export async function createTables(): Promise<void> {
 export async function getAllBookmarks(): Promise<Bookmark[]> {
   const db = initDb();
 
-  const result = await db.all("SELECT id, url FROM bookmarks");
+  const stmt = db.prepare("SELECT id, url FROM bookmarks");
+  const result = await stmt.all();
   return result as Bookmark[];
 }
