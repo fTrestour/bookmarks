@@ -5,11 +5,11 @@ import * as database from "./database";
 import * as config from "./config";
 
 describe("api", () => {
-  vi.spyOn(config, "getConfig").mockReturnValue({ 
-    port: 3000, 
-    baseUrl: "http://localhost", 
-    env: "test", 
-    dbUri: ":memory:" 
+  vi.spyOn(config, "getConfig").mockReturnValue({
+    port: 3000,
+    baseUrl: "http://localhost",
+    env: "test",
+    dbUri: ":memory:",
   });
   it("accepts calls on /", async () => {
     const response = await server.inject({
