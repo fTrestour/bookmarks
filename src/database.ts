@@ -50,9 +50,18 @@ function toObject({ columns, rows }: ResultSet) {
   return rows.map((row) =>
     columns.reduce((acc, column, index) => {
       const value = row[index];
-      // Parse embedding field from JSON string back to array
-      if (column === "embedding" && typeof value === "string") {
-        return { ...acc, [column]: JSON.parse(value) };
+      // Handle embedding field - convert vector32 result back to array
+      if (column === "embedding") {
+        if (typeof value === "string") {
+          return { ...acc, [column]: JSON.parse(value) };
+        } else if (value && typeof value === "object" && Array.isArray(value)) {
+          return { ...acc, [column]: value };
+        } else if (value && typeof value === "object") {
+          // If it's a vector32 object, try to extract the array data
+          // This might need adjustment based on the actual structure returned by vector32
+          return { ...acc, [column]: Object.values(value) };
+        }
+        return { ...acc, [column]: [] };
       }
       return { ...acc, [column]: value };
     }, {}),
