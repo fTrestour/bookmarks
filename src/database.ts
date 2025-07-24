@@ -1,10 +1,10 @@
-import Database from "libsql";
+import Database from "libsql/promise";
 import { getConfig } from "./config";
 
 export function initDb() {
   const { dbUri } = getConfig();
 
-  const db = new Database(dbUri);
+  const db = new Database(dbUri, { async: true });
 
   return db;
 }
