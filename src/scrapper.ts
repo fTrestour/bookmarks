@@ -10,7 +10,7 @@ export async function getPageContent(url: string): Promise<string> {
   await browser.close();
 
   const { text } = await generateText({
-    model: openai("gpt-4o-mini"),
+    model: openai("gpt-4.1-mini"),
     prompt: `Please convert the following HTML content into clean, well-formatted markdown. Focus on the main content and ignore navigation, ads, and other peripheral elements. Preserve the structure and hierarchy of the content.
 
 HTML content:
