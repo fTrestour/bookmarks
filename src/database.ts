@@ -17,7 +17,7 @@ export async function createTables(): Promise<void> {
   const db = new Database(dbUri, { async: true });
 
   await db.exec(
-    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT)",
+    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE)",
   );
 }
 
