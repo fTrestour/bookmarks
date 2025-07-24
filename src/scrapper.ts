@@ -10,10 +10,10 @@ export async function getPageContent(url: string): Promise<string> {
   const content = await page.content();
   await browser.close();
 
-  const { aiModel } = getConfig();
+  const { scrappingAiModel } = getConfig();
 
   const { text } = await generateText({
-    model: openai(aiModel),
+    model: openai(scrappingAiModel),
     prompt: `Please convert the following HTML content into clean, well-formatted markdown. Focus on the main content and ignore navigation, ads, and other peripheral elements. Preserve the structure and hierarchy of the content.
 
 HTML content:
