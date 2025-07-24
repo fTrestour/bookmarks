@@ -1,6 +1,6 @@
 import Database from "libsql/promise";
 import { getConfig } from "./config.ts";
-import { Bookmark } from "./types.ts";
+import type { Bookmark } from "./types.ts";
 
 export function initDb() {
   const { dbUri } = getConfig();
