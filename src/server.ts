@@ -1,5 +1,6 @@
 import fastify from "fastify";
-import { getAllBookmarks } from "./database.ts";
+import { getAllBookmarks, insertBookmarks } from "./database.ts";
+import { bookmarksSchema, parse } from "./types.ts";
 
 export const server = fastify({ logger: true });
 
@@ -12,4 +13,11 @@ server.get("/", () => {
 server.get("/bookmarks", async () => {
   const bookmarks = await getAllBookmarks();
   return bookmarks;
+});
+
+// Add a POST route to insert bookmarks
+server.post("/bookmarks", async (request) => {
+  const bookmarks = parse(bookmarksSchema, request.body);
+  await insertBookmarks(bookmarks);
+  return { success: true };
 });
