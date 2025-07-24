@@ -2,8 +2,10 @@ import { describe, it, expect } from "vitest";
 import { server } from "./server.ts";
 import { vi } from "vitest";
 import * as database from "./database";
+import * as config from "./config";
 
 describe("api", () => {
+  vi.spyOn(config, "getConfig").mockReturnValue({ dbUri: ":memory:" });
   it("accepts calls on /", async () => {
     const response = await server.inject({
       method: "GET",
