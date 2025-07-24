@@ -1,5 +1,5 @@
 import fastify from 'fastify';
-import { getConfig } from './config';
+import { getConfig } from './config.js';
 
 export const server = fastify({ logger: true });
 
