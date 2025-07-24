@@ -1,6 +1,6 @@
 import fastify from "fastify";
 import { getAllBookmarks, insertBookmarks } from "./database.ts";
-import { bookmarksSchema, parse } from "./types.ts";
+import { parse } from "./types.ts";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 
