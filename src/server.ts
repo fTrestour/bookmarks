@@ -1,9 +1,8 @@
 import fastify from "fastify";
 import { getAllBookmarks, insertBookmarks } from "./database.ts";
 import { parse } from "./types.ts";
-import { randomUUID } from "crypto";
 import { z } from "zod";
-import { getPageContent } from "./scrapper.ts";
+import { getBookmarkDataFromUrl } from "../domains/bookmarks.ts";
 
 export const server = fastify({ logger: true });
 
@@ -24,9 +23,8 @@ server.post("/bookmarks", async (request) => {
     url: z.string(),
   });
   const body = parse(bodySchema, request.body);
-  const content = await getPageContent(body.url);
-  console.log(content);
-  await insertBookmarks([{ id: randomUUID(), url: body.url }]);
+  const bookmark = await getBookmarkDataFromUrl(body.url);
+  await insertBookmarks([bookmark]);
   return { success: true };
 });
 
@@ -39,9 +37,8 @@ server.post("/bookmarks/batch", async (request) => {
   const body = parse(batchBodySchema, request.body);
   const bookmarks = [];
   for (const item of body) {
-    const content = await getPageContent(item.url);
-    console.log(content);
-    bookmarks.push({ id: randomUUID(), url: item.url });
+    const bookmark = await getBookmarkDataFromUrl(item.url);
+    bookmarks.push(bookmark);
   }
   await insertBookmarks(bookmarks);
   return { success: true };
