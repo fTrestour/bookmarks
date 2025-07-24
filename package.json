@@ -36,7 +36,8 @@
   },
   "dependencies": {
     "fastify": "^5.4.0",
-    "libsql": "^0.5.17"
+    "libsql": "^0.5.17",
+    "zod": "^4.0.8"
   },
   "lint-staged": {
     "**/*": [

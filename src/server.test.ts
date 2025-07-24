@@ -17,7 +17,7 @@ describe("api", () => {
   it("returns bookmarks on /bookmarks", async () => {
     const mockBookmarks = [
       { id: "1", url: "https://example.com" },
-      { id: "2", url: "https://google.com" }
+      { id: "2", url: "https://google.com" },
     ];
 
     vi.spyOn(database, "getAllBookmarks").mockResolvedValue(mockBookmarks);
