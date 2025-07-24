@@ -4,8 +4,8 @@
   "description": "A simple bookmark manager",
   "scripts": {
     "test": "bun test",
-    "dev": "node --watch src/server.ts",
-    "start": "node src/server.ts",
+    "dev": "node --watch src/app.ts",
+    "start": "node src/app.ts",
     "check-types": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",

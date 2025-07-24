@@ -1,5 +1,4 @@
 import fastify from "fastify";
-import { getConfig } from "./config.ts";
 import { getAllBookmarks } from "./database.ts";
 
 export const server = fastify({ logger: true });
