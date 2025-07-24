@@ -1,12 +1,10 @@
-import { createClient } from '@libsql/client';
+import Database from 'libsql';
 import { getConfig } from './config';
 
 export function initDb() {
   const { dbUri } = getConfig();
 
-  const client = createClient({
-    url: dbUri
-  });
+  const db = new Database(dbUri);
 
-  return client;
+  return db;
 }
