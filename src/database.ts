@@ -21,7 +21,7 @@ export async function getAllBookmarks(): Promise<Bookmark[]> {
 
   const stmt = db.prepare("SELECT id, url FROM bookmarks");
   const result = await stmt.all();
-  
+
   // Validate and parse each row using the schema
   return result.map((row: any) => bookmarkSchema.parse(row));
 }
