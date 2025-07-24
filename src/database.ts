@@ -19,8 +19,7 @@ export async function createTables(): Promise<void> {
 export async function getAllBookmarks(): Promise<Bookmark[]> {
   const db = initDb();
 
-  const stmt = db.prepare("SELECT id, url FROM bookmarks");
-  const result = await stmt.all();
+  const result = await db.exec("SELECT id, url FROM bookmarks");
 
   // Validate and parse each row using the schema
   return result.map((row: any) => bookmarkSchema.parse(row));
