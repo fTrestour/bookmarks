@@ -4,7 +4,7 @@ import fastify from 'fastify';
 describe('api', () => {
   it('accepts calls on /', async () => {
     const server = fastify({ logger: false });
-    
+
     server.get('/', async (request, reply) => {
       return '👋';
     });
