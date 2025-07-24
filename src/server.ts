@@ -1,11 +1,11 @@
-import fastify from 'fastify';
-import { getConfig } from './config.ts';
+import fastify from "fastify";
+import { getConfig } from "./config.ts";
 
 export const server = fastify({ logger: true });
 
 // Add a root route that returns a wave emoji
-server.get('/', async (request, reply) => {
-  return '👋';
+server.get("/", async () => {
+  return "👋";
 });
 
 // Start the server

@@ -1,5 +1,5 @@
-import Database from 'libsql';
-import { getConfig } from './config';
+import Database from "libsql";
+import { getConfig } from "./config";
 
 export function initDb() {
   const { dbUri } = getConfig();
@@ -11,6 +11,6 @@ export function initDb() {
 
 export async function createTables(): Promise<void> {
   const db = initDb();
-  
+
   await db.exec("CREATE TABLE bookmarks (id TEXT PRIMARY KEY, url TEXT)");
 }
