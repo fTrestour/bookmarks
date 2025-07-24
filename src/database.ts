@@ -12,7 +12,7 @@ async function getDb() {
 
   const newDb = createClient({ url: dbUri });
   await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE)",
+    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE, content TEXT, embedding TEXT)",
   );
 
   db = newDb;
@@ -25,8 +25,8 @@ export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
 
   await db.batch(
     bookmarks.map((bookmark) => ({
-      sql: `INSERT INTO bookmarks (id, url) VALUES (?, ?)`,
-      args: [bookmark.id, bookmark.url],
+      sql: `INSERT INTO bookmarks (id, url, content, embedding) VALUES (?, ?, ?, ?)`,
+      args: [bookmark.id, bookmark.url, bookmark.content, JSON.stringify(bookmark.embedding)],
     })),
     "write",
   );
@@ -44,7 +44,14 @@ export async function getAllBookmarks(): Promise<Bookmark[]> {
 function toObject({ columns, rows }: ResultSet) {
   return rows.map((row) =>
     columns.reduce(
-      (acc, column, index) => ({ ...acc, [column]: row[index] }),
+      (acc, column, index) => {
+        const value = row[index];
+        // Parse embedding field from JSON string back to array
+        if (column === 'embedding' && typeof value === 'string') {
+          return { ...acc, [column]: JSON.parse(value) };
+        }
+        return { ...acc, [column]: value };
+      },
       {},
     ),
   );
