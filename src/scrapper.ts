@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { getConfig } from "./config.js";
+import { getConfig } from "./config.ts";
 
 export async function getPageContent(url: string): Promise<string> {
   const browser = await chromium.launch();
