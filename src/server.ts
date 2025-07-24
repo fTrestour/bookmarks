@@ -11,8 +11,9 @@ server.get('/', async (request, reply) => {
 const start = async () => {
   try {
     const port = Number(process.env.PORT) || 3000;
+    const baseUrl = process.env.BASE_URL || 'localhost';
     await server.listen({ port });
-    console.log(`Server listening on http://localhost:${port}`);
+    console.log(`Server listening on http://${baseUrl}:${port}`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);
