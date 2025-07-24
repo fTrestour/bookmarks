@@ -1,0 +1,23 @@
+{
+  "name": "bookmarks",
+  "version": "1.0.0",
+  "description": "A simple bookmark manager",
+  "scripts": {
+    "test": "bun test",
+    "dev": "node --watch src/server.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fTrestour/bookmarks.git"
+  },
+  "author": "fTrestour",
+  "bugs": {
+    "url": "https://github.com/fTrestour/bookmarks/issues"
+  },
+  "homepage": "https://github.com/fTrestour/bookmarks#readme",
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "typescript": "^5.8.3"
+  }
+}
