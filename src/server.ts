@@ -1,6 +1,8 @@
 import fastify from "fastify";
 import { getAllBookmarks, insertBookmarks } from "./database.ts";
 import { bookmarksSchema, parse } from "./types.ts";
+import { randomUUID } from "crypto";
+import { z } from "zod";
 
 export const server = fastify({ logger: true });
 
@@ -17,7 +19,10 @@ server.get("/bookmarks", async () => {
 
 // Add a POST route to insert bookmarks
 server.post("/bookmarks", async (request) => {
-  const bookmarks = parse(bookmarksSchema, request.body);
-  await insertBookmarks(bookmarks);
+  const bodySchema = z.object({
+    url: z.string(),
+  });
+  const body = parse(bodySchema, request.body);
+  await insertBookmarks([{ id: randomUUID(), url: body.url }]);
   return { success: true };
 });

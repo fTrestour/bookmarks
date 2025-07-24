@@ -38,4 +38,23 @@ describe("api", () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual(testBookmarks);
   });
+
+  it("creates a bookmark on POST /bookmarks", async () => {
+    const response = await server.inject({
+      method: "POST",
+      url: "/bookmarks",
+      payload: {
+        url: "https://example.org",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(JSON.parse(response.body)).toEqual({ success: true });
+
+    // Verify the bookmark was actually created
+    const bookmarks = await database.getAllBookmarks();
+    expect(bookmarks).toHaveLength(1);
+    expect(bookmarks[0].url).toBe("https://example.org");
+    expect(bookmarks[0].id).toBeDefined();
+  });
 });
