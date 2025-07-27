@@ -47,7 +47,7 @@ describe("api", () => {
       payload: { name: "test-token" },
     });
     authHeader = {
-      authorization: `Bearer ${JSON.parse(tokenResp.body).token}`,
+      authorization: `Bearer ${(JSON.parse(tokenResp.body) as { token: string }).token}`,
     };
   });
 

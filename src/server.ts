@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, { type FastifyRequest, type FastifyReply } from "fastify";
 import {
   getAllBookmarks,
   insertBookmarks,
@@ -13,9 +13,9 @@ import { createToken, validateToken } from "./authentication.ts";
 
 export const server = fastify({ logger: getLoggerConfig() });
 
-async function assertAuthorized(request: any, reply: any) {
+async function assertAuthorized(request: FastifyRequest, reply: FastifyReply) {
   const header = request.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
+  if (!header || !header.startsWith("Bearer ")) {
     reply.code(401).send({ error: "Unauthorized" });
     return false;
   }
@@ -31,13 +31,13 @@ server.get("/", () => {
   return "👋";
 });
 
-server.post("/tokens", async (request, reply) => {
+server.post("/tokens", async (request) => {
   const { name } = z.object({ name: z.string() }).parse(request.body);
   const { token, payload } = await createToken(name);
   return { token, jti: payload.jti };
 });
 
-server.delete("/tokens/:jti", async (request, reply) => {
+server.delete("/tokens/:jti", async (request) => {
   const { jti } = z.object({ jti: z.string() }).parse(request.params);
   await deleteActiveToken(jti);
   return { success: true };
