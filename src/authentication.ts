@@ -35,7 +35,10 @@ export async function validateToken(token: string): Promise<boolean> {
   }
 }
 
-export async function assertAuthorized(request: FastifyRequest, reply: FastifyReply) {
+export async function assertAuthorized(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
   const header = request.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
     reply.code(401).send({ error: "Unauthorized" });
