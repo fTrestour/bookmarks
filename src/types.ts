@@ -20,7 +20,4 @@ export const activeTokenSchema = z.object({
   name: z.string(),
 });
 
-export interface ActiveToken {
-  jti: string;
-  name: string;
-}
+export type ActiveToken = z.infer<typeof activeTokenSchema>;

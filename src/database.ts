@@ -79,7 +79,7 @@ export async function deleteActiveToken(jti: string): Promise<void> {
 }
 
 export async function getAllBookmarks(
-  searchEmbedding?: number[],
+  searchEmbedding: number[] | null,
 ): Promise<Bookmark[]> {
   const db = await getDb();
 

@@ -153,7 +153,7 @@ describe("api", () => {
     expect(embedTextSpy).toHaveBeenCalled();
     expect(getPageMetadataSpy).toHaveBeenCalled();
 
-    const bookmarks = await database.getAllBookmarks();
+    const bookmarks = await database.getAllBookmarks(null);
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining([url]));
   });
 
@@ -176,7 +176,7 @@ describe("api", () => {
     expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
     expect(getPageMetadataSpy).toHaveBeenCalledTimes(urls.length);
 
-    const bookmarks = await database.getAllBookmarks();
+    const bookmarks = await database.getAllBookmarks(null);
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
   });
 

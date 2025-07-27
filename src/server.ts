@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import {
   getAllBookmarks,
   insertBookmarks,
@@ -11,8 +11,7 @@ import {
 } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
-import { createToken } from "./authentication.ts";
-import { assertAuthorized } from "./middleware.ts";
+import { createToken, validateToken } from "./authentication.ts";
 
 export const server = fastify({ logger: getLoggerConfig() });
 
@@ -36,7 +35,7 @@ server.get("/bookmarks", async (request) => {
   const querySchema = z.object({ search: z.string().optional() });
   const { search } = querySchema.parse(request.query);
 
-  const searchEmbedding = search ? await embedText(search) : undefined;
+  const searchEmbedding = search ? await embedText(search) : null;
   const bookmarks = await getAllBookmarks(searchEmbedding);
   return bookmarks;
 });
@@ -74,3 +73,22 @@ server.post("/bookmarks/batch", {
     };
   },
 });
+
+async function assertAuthorized(
+  request: FastifyRequest,
+  reply: FastifyReply,
+): Promise<void> {
+  const header = request.headers.authorization;
+
+  if (!header?.startsWith("Bearer ")) {
+    reply.code(401).send({ error: "Unauthorized" });
+    return;
+  }
+
+  const ok = await validateToken(header.slice(7));
+
+  if (!ok) {
+    reply.code(401).send({ error: "Unauthorized" });
+    return;
+  }
+}
