@@ -207,21 +207,34 @@ describe("api", () => {
   });
 
   describe("DELETE /tokens/:jti", () => {
+    it("rejects unauthorized requests", async () => {
+      const resp = await server.inject({
+        method: "DELETE",
+        url: "/tokens/some-jti",
+      });
+      expect(resp.statusCode).toBe(401);
+    });
+
     it("deletes a token", async () => {
       const { jti } = JSON.parse(
         (
           await server.inject({
             method: "POST",
             url: "/tokens",
+            headers: headers(),
             payload: { name: "to-delete" },
           })
         ).body,
       );
+
       const del = await server.inject({
         method: "DELETE",
         url: `/tokens/${jti}`,
+        headers: headers(),
       });
+
       expect(del.statusCode).toBe(200);
+      expect(await database.isActiveToken(jti)).toBe(false);
     });
   });
 
