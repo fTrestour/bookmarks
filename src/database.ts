@@ -29,21 +29,29 @@ async function getDb() {
 export async function insertBookmarks(
   bookmarks: BookmarkWithContent[],
 ): Promise<void> {
-  const db = await getDb();
+  try {
+    const db = await getDb();
 
-  await db.batch(
-    bookmarks.map((bookmark) => ({
-      sql: `INSERT INTO bookmarks (id, url, title, content, embedding) VALUES (?, ?, ?, ?, vector32(?))`,
-      args: [
-        bookmark.id,
-        bookmark.url,
-        bookmark.title,
-        bookmark.content,
-        JSON.stringify(bookmark.embedding),
-      ],
-    })),
-    "write",
-  );
+    await db.batch(
+      bookmarks.map((bookmark) => ({
+        sql: `INSERT INTO bookmarks (id, url, title, content, embedding) VALUES (?, ?, ?, ?, vector32(?))`,
+        args: [
+          bookmark.id,
+          bookmark.url,
+          bookmark.title,
+          bookmark.content,
+          JSON.stringify(bookmark.embedding),
+        ],
+      })),
+      "write",
+    );
+  } catch (error) {
+    throw new Error(
+      `Failed to insert bookmarks: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    );
+  }
 }
 
 export async function getAllBookmarks(
