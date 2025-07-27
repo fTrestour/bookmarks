@@ -26,17 +26,15 @@ ${content}`,
 
 export async function getPageMetadata(
   content: string,
-): Promise<{ title: string; author: string }> {
+): Promise<{ title: string; author: string | null }> {
   const { scrappingAiModel } = getConfig();
   const { object } = await generateObject({
     model: openai(scrappingAiModel),
     schema: z.object({
-      title: z.string(),
-      author: z.string(),
+      title: z.string().describe("The title of the article."),
+      author: z.string().describe("The author of the article.").nullable(),
     }),
-    prompt:
-      `Extract the article's title and author from the markdown below. ` +
-      `Return JSON with keys "title" and "author" only.\n\n${content}`,
+    prompt: content,
   });
   return object;
 }

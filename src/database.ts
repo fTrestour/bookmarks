@@ -49,7 +49,7 @@ export async function insertBookmarks(
 
 export async function getAllBookmarks(
   searchEmbedding?: number[],
-): Promise<BookmarkWithContent[]> {
+): Promise<Bookmark[]> {
   const db = await getDb();
 
   let sql = "SELECT * FROM bookmarks";
