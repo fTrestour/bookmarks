@@ -9,6 +9,7 @@ export function getConfig(): {
   dbUri: string;
   scrapingAiModel: string;
   embeddingModel: string;
+  jwtSecret: string;
 } {
   const rawPort = process.env.PORT;
   const port = Number.isInteger(Number(rawPort)) ? Number(rawPort) : 3000;
@@ -19,6 +20,7 @@ export function getConfig(): {
   const scrapingAiModel = process.env.SCRAPING_AI_MODEL ?? "gpt-4.1-mini";
   const embeddingModel =
     process.env.AI_EMBEDDING_MODEL ?? "text-embedding-3-small";
+  const jwtSecret = process.env.JWT_SECRET ?? "dev_secret";
 
   return {
     port,
@@ -27,5 +29,6 @@ export function getConfig(): {
     dbUri,
     scrapingAiModel,
     embeddingModel,
+    jwtSecret,
   };
 }

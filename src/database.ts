@@ -5,7 +5,7 @@ import {
   type ResultSet,
 } from "@libsql/client";
 import { getConfig } from "./config.ts";
-import type { Bookmark, BookmarkWithContent } from "./types.ts";
+import type { Bookmark, BookmarkWithContent, ActiveToken } from "./types.ts";
 import { bookmarksSchema } from "./types.ts";
 
 let db: Client | null = null;
@@ -19,6 +19,9 @@ async function getDb() {
   const newDb = createClient({ url: dbUri });
   await newDb.execute(
     "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE, title TEXT, content TEXT, embedding F32_BLOB(1536))",
+  );
+  await newDb.execute(
+    "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY, name TEXT)"
   );
 
   db = newDb;
@@ -52,6 +55,27 @@ export async function insertBookmarks(
       }`,
     );
   }
+}
+
+export async function insertActiveToken({ jti, name }: ActiveToken) {
+  const db = await getDb();
+  await db.execute("INSERT INTO active_tokens (jti, name) VALUES (?, ?)", [
+    jti,
+    name,
+  ]);
+}
+
+export async function isActiveToken(jti: string): Promise<boolean> {
+  const db = await getDb();
+  const res = await db.execute("SELECT 1 FROM active_tokens WHERE jti = ?", [
+    jti,
+  ]);
+  return res.rows.length > 0;
+}
+
+export async function deleteActiveToken(jti: string): Promise<void> {
+  const db = await getDb();
+  await db.execute("DELETE FROM active_tokens WHERE jti = ?", [jti]);
 }
 
 export async function getAllBookmarks(

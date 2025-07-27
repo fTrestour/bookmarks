@@ -1,15 +1,45 @@
 import fastify from "fastify";
-import { getAllBookmarks, insertBookmarks } from "./database.ts";
+import { getAllBookmarks, insertBookmarks, deleteActiveToken } from "./database.ts";
 import { z } from "zod";
 import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import type { BookmarkWithContent } from "./types.ts";
+import {
+  createToken,
+  validateToken,
+} from "./authentication.ts";
 
 export const server = fastify({ logger: getLoggerConfig() });
 
+async function assertAuthorized(request: any, reply: any) {
+  const header = request.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    reply.code(401).send({ error: "Unauthorized" });
+    return false;
+  }
+  const ok = await validateToken(header.slice(7));
+  if (!ok) {
+    reply.code(401).send({ error: "Unauthorized" });
+    return false;
+  }
+  return true;
+}
+
 server.get("/", () => {
   return "👋";
+});
+
+server.post("/tokens", async (request, reply) => {
+  const { name } = z.object({ name: z.string() }).parse(request.body);
+  const { token, payload } = await createToken(name);
+  return { token, jti: payload.jti };
+});
+
+server.delete("/tokens/:jti", async (request, reply) => {
+  const { jti } = z.object({ jti: z.string() }).parse(request.params);
+  await deleteActiveToken(jti);
+  return { success: true };
 });
 
 server.get("/bookmarks", async (request) => {
@@ -21,7 +51,8 @@ server.get("/bookmarks", async (request) => {
   return bookmarks;
 });
 
-server.post("/bookmarks", async (request) => {
+server.post("/bookmarks", async (request, reply) => {
+  if (!(await assertAuthorized(request, reply))) return;
   const bodySchema = z.object({
     url: z.string().url(),
   });
@@ -33,7 +64,8 @@ server.post("/bookmarks", async (request) => {
   return { success: true };
 });
 
-server.post("/bookmarks/batch", async (request) => {
+server.post("/bookmarks/batch", async (request, reply) => {
+  if (!(await assertAuthorized(request, reply))) return;
   const bodySchema = z.object({
     url: z.string().url(),
   });

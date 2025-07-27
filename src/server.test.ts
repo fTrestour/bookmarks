@@ -20,7 +20,9 @@ describe("api", () => {
     randomInt(0, 100) / 100,
   ];
 
-  beforeEach(() => {
+  let authHeader: { authorization: string };
+
+  beforeEach(async () => {
     getConfigSpy.mockReset().mockReturnValue({
       port: 3000,
       host: "localhost",
@@ -37,6 +39,15 @@ describe("api", () => {
     });
 
     embedTextSpy.mockReset().mockResolvedValue(defaultEmbedding);
+
+    const tokenResp = await server.inject({
+      method: "POST",
+      url: "/tokens",
+      payload: { name: "test-token" },
+    });
+    authHeader = {
+      authorization: `Bearer ${JSON.parse(tokenResp.body).token}`,
+    };
   });
 
   it("accepts calls on /", async () => {
@@ -130,6 +141,7 @@ describe("api", () => {
     const response = await server.inject({
       method: "POST",
       url: "/bookmarks",
+      headers: authHeader,
       payload: {
         url,
       },
@@ -152,6 +164,7 @@ describe("api", () => {
     const response = await server.inject({
       method: "POST",
       url: "/bookmarks/batch",
+      headers: authHeader,
       payload: urls.map((url) => ({ url })),
     });
 
@@ -164,5 +177,31 @@ describe("api", () => {
 
     const bookmarks = await database.getAllBookmarks();
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
+  });
+
+  it("rejects unauthorized bookmark creation", async () => {
+    const resp = await server.inject({
+      method: "POST",
+      url: "/bookmarks",
+      payload: { url: "https://example.com/" + randomUUID() },
+    });
+    expect(resp.statusCode).toBe(401);
+  });
+
+  it("deletes a token", async () => {
+    const { jti } = JSON.parse(
+      (
+        await server.inject({
+          method: "POST",
+          url: "/tokens",
+          payload: { name: "to-delete" },
+        })
+      ).body,
+    );
+    const del = await server.inject({
+      method: "DELETE",
+      url: `/tokens/${jti}`,
+    });
+    expect(del.statusCode).toBe(200);
   });
 });

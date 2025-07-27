@@ -14,3 +14,8 @@ export type BookmarkWithContent = Bookmark & {
   content: string;
   embedding: number[];
 };
+
+export type ActiveToken = {
+  jti: string;
+  name: string;
+};
