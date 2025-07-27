@@ -58,11 +58,26 @@ export async function insertBookmarks(
 }
 
 export async function insertActiveToken({ jti, name }: ActiveToken) {
-  const db = await getDb();
-  await db.execute("INSERT INTO active_tokens (jti, name) VALUES (?, ?)", [
-    jti,
-    name,
-  ]);
+  try {
+    const db = await getDb();
+    await db.execute("INSERT INTO active_tokens (jti, name) VALUES (?, ?)", [
+      jti,
+      name,
+    ]);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("UNIQUE constraint failed")
+    ) {
+      throw new Error(`Token with JTI '${jti}' already exists`);
+    }
+
+    throw new Error(
+      `Failed to insert active token: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    );
+  }
 }
 
 export async function isActiveToken(jti: string): Promise<boolean> {

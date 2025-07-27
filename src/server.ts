@@ -22,10 +22,14 @@ server.post("/tokens", {
   },
 });
 
-server.delete("/tokens/:jti", async (request) => {
-  const { jti } = z.object({ jti: z.string() }).parse(request.params);
-  await deleteActiveToken(jti);
-  return { success: true };
+server.delete("/tokens/:jti", {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  preHandler: assertAuthorized,
+  handler: async (request) => {
+    const { jti } = z.object({ jti: z.string() }).parse(request.params);
+    await deleteActiveToken(jti);
+    return { success: true };
+  },
 });
 
 server.get("/bookmarks", async (request) => {
