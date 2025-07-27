@@ -18,10 +18,10 @@ async function getDb() {
 
   const newDb = createClient({ url: dbUri });
   await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE, title TEXT, content TEXT, embedding F32_BLOB(1536))",
+    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, embedding F32_BLOB(1536) NOT NULL)",
   );
   await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY, name TEXT)",
+    "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY, name TEXT NOT NULL)",
   );
 
   db = newDb;
