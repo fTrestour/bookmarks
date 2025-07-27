@@ -9,7 +9,8 @@ import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import type { BookmarkWithContent } from "./types.ts";
-import { createToken, assertAuthorized } from "./authentication.ts";
+import { createToken } from "./authentication.ts";
+import { assertAuthorized } from "./middleware.ts";
 
 export const server = fastify({ logger: getLoggerConfig() });
 
