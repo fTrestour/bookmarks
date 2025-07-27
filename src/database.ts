@@ -65,6 +65,7 @@ function toObject({ columns, rows }: ResultSet) {
       const value = row[index];
       // Handle embedding field - convert vector32 result back to array
       if (column === "embedding") {
+        console.log("value", value);
         if (typeof value === "string") {
           return { ...acc, [column]: JSON.parse(value) };
         } else if (value && typeof value === "object" && Array.isArray(value)) {
