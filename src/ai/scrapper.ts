@@ -11,10 +11,10 @@ export async function getPageContent(url: string): Promise<string> {
     await page.goto(url, { timeout: 30000 });
     const content = await page.content();
 
-    const { scrappingAiModel } = getConfig();
+    const { scrapingAiModel } = getConfig();
 
     const { text } = await generateText({
-      model: openai(scrappingAiModel),
+      model: openai(scrapingAiModel),
       prompt: `Please convert the following HTML content into clean, well-formatted markdown. Focus on the main content and ignore navigation, ads, and other peripheral elements. Preserve the structure and hierarchy of the content.
 
 HTML content:
@@ -30,13 +30,22 @@ ${content}`,
 export async function getPageMetadata(
   content: string,
 ): Promise<{ title: string }> {
-  const { scrappingAiModel } = getConfig();
-  const { object } = await generateObject({
-    model: openai(scrappingAiModel),
-    schema: z.object({
-      title: z.string().describe("The title of the article."),
-    }),
-    prompt: content,
-  });
-  return object;
+  const { scrapingAiModel } = getConfig();
+
+  try {
+    const { object } = await generateObject({
+      model: openai(scrapingAiModel),
+      schema: z.object({
+        title: z.string().describe("The title of the article."),
+      }),
+      prompt: content,
+    });
+    return object;
+  } catch (error) {
+    throw new Error(
+      `Failed to get page metadata: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    );
+  }
 }

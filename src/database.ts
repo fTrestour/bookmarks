@@ -1,12 +1,12 @@
-import { getConfig } from "./config.ts";
-import type { BookmarkWithContent, Bookmark } from "./types.ts";
-import { bookmarksWithContentSchema } from "./types.ts";
 import {
   type Client,
   createClient,
-  type ResultSet,
   type InValue,
+  type ResultSet,
 } from "@libsql/client";
+import { getConfig } from "./config.ts";
+import type { Bookmark, BookmarkWithContent } from "./types.ts";
+import { bookmarksSchema } from "./types.ts";
 
 let db: Client | null = null;
 async function getDb() {
@@ -68,7 +68,7 @@ export async function getAllBookmarks(
   }
 
   const result = await db.execute({ sql, args });
-  return bookmarksWithContentSchema.parse(toObject(result));
+  return bookmarksSchema.parse(toObject(result));
 }
 
 function toObject({ columns, rows }: ResultSet) {

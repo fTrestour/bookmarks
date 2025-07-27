@@ -23,10 +23,10 @@ describe("api", () => {
   beforeEach(() => {
     getConfigSpy.mockReset().mockReturnValue({
       port: 3000,
-      baseUrl: "localhost",
+      host: "localhost",
       env: "test",
       dbUri: ":memory:",
-      scrappingAiModel: "gpt-4o-mini",
+      scrapingAiModel: "gpt-4o-mini",
       embeddingModel: "text-embedding-3-small",
     });
 
