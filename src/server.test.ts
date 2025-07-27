@@ -62,13 +62,32 @@ describe("api", () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual(testBookmarks);
+  });
 
-    // search path
+  it("searches bookmarks on /bookmarks with search query", async () => {
+    const testBookmarks = [
+      {
+        id: "1",
+        url: "https://example.com",
+        content: "Example content",
+        embedding: [0.1, 0.2, 0.3],
+      },
+      {
+        id: "2",
+        url: "https://google.com",
+        content: "Google content",
+        embedding: [0.4, 0.5, 0.6],
+      },
+    ];
+
+    await database.insertBookmarks(testBookmarks);
+
     const searchResp = await server.inject({
       method: "GET",
       url: "/bookmarks",
       query: { search: "Example content" },
     });
+    
     expect(searchResp.statusCode).toBe(200);
     expect(embedTextSpy).toHaveBeenCalledWith("Example content");
   });
