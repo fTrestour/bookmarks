@@ -87,7 +87,7 @@ describe("api", () => {
       url: "/bookmarks",
       query: { search: "Example content" },
     });
-    
+
     expect(searchResp.statusCode).toBe(200);
     expect(embedTextSpy).toHaveBeenCalledWith("Example content");
   });
