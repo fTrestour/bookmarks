@@ -1,7 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-Avoid `index.ts` files, if possible give a descriptive name to the file.
-If a folder `foo` contains only `foo/index.ts` and `foo/index.test.ts`, prefer using `foo.ts` and `foo.test.ts` instead

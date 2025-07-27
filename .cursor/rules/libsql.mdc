@@ -1,6 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-The db driver is libsql. Always check the doc to see what it can do

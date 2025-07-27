@@ -1,6 +1,0 @@
----
-description: 
-globs: 
-alwaysApply: true
----
-This project uses no ORM for the sake of simplicity. Just write queries manually
