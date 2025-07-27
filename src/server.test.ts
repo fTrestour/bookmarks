@@ -4,11 +4,13 @@ import { vi } from "vitest";
 import * as database from "./database";
 import * as config from "./config";
 import * as scrapper from "./scrapper";
+import * as embeddings from "./embeddings";
 import { randomUUID } from "crypto";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
   const getPageContentSpy = vi.spyOn(scrapper, "getPageContent");
+  const embedTextSpy = vi.spyOn(embeddings, "embedText");
 
   beforeEach(() => {
     getConfigSpy.mockReset().mockReturnValue({
@@ -17,9 +19,14 @@ describe("api", () => {
       env: "test",
       dbUri: ":memory:",
       scrappingAiModel: "gpt-4o-mini",
+      embeddingModel: "text-embedding-3-small",
     });
 
     getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
+
+    embedTextSpy
+      .mockReset()
+      .mockResolvedValue([0.1, 0.2, 0.3]); // deterministic fake embedding
   });
 
   it("accepts calls on /", async () => {
@@ -57,6 +64,15 @@ describe("api", () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual(testBookmarks);
+
+    // search path
+    const searchResp = await server.inject({
+      method: "GET",
+      url: "/bookmarks",
+      query: { search: "Example content" },
+    });
+    expect(searchResp.statusCode).toBe(200);
+    expect(embedTextSpy).toHaveBeenCalledWith("Example content");
   });
 
   it("creates a bookmark on POST /bookmarks", async () => {
@@ -71,6 +87,7 @@ describe("api", () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ success: true });
+    expect(embedTextSpy).toHaveBeenCalled();
 
     const bookmarks = await database.getAllBookmarks();
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining([url]));
@@ -89,6 +106,7 @@ describe("api", () => {
 
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ success: true });
+    expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
 
     const bookmarks = await database.getAllBookmarks();
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));

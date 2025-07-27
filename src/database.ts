@@ -37,12 +37,20 @@ export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
   );
 }
 
-export async function getAllBookmarks(): Promise<Bookmark[]> {
+export async function getAllBookmarks(
+  searchEmbedding?: number[],
+): Promise<Bookmark[]> {
   const db = await getDb();
 
-  const result = await db.execute({
-    sql: "SELECT * FROM bookmarks",
-  });
+  let sql = "SELECT * FROM bookmarks";
+  let args: any[] = [];
+  if (searchEmbedding) {
+    sql =
+      "SELECT id, url, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
+    args = [JSON.stringify(searchEmbedding)];
+  }
+
+  const result = await db.execute({ sql, args });
   return parse(bookmarksSchema, toObject(result));
 }
 

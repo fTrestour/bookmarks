@@ -3,6 +3,7 @@ import { getAllBookmarks, insertBookmarks } from "./database.ts";
 import { parse } from "./types.ts";
 import { z } from "zod";
 import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
+import { embedText } from "./embeddings.ts";
 
 export const server = fastify({ logger: true });
 
@@ -10,8 +11,12 @@ server.get("/", () => {
   return "👋";
 });
 
-server.get("/bookmarks", async () => {
-  const bookmarks = await getAllBookmarks();
+server.get("/bookmarks", async (request) => {
+  const querySchema = z.object({ search: z.string().optional() });
+  const { search } = parse(querySchema, request.query);
+
+  const searchEmbedding = search ? await embedText(search) : undefined;
+  const bookmarks = await getAllBookmarks(searchEmbedding);
   return bookmarks;
 });
 
