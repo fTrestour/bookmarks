@@ -66,7 +66,12 @@ function toObject({ columns, rows }: ResultSet) {
       // Handle ArrayBuffer type - convert to array
       if (value instanceof ArrayBuffer) {
         const float32Array = new Float32Array(value);
-        return { ...acc, [column]: Array.from(float32Array).map(num => Math.round(num * 1000000) / 1000000) };
+        return {
+          ...acc,
+          [column]: Array.from(float32Array).map(
+            (num) => Math.round(num * 1000000) / 1000000,
+          ),
+        };
       }
       return { ...acc, [column]: value };
     }, {}),
