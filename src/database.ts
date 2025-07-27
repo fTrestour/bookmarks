@@ -21,7 +21,7 @@ async function getDb() {
     "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE, title TEXT, content TEXT, embedding F32_BLOB(1536))",
   );
   await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY, name TEXT)"
+    "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY, name TEXT)",
   );
 
   db = newDb;
