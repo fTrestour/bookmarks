@@ -1,14 +1,15 @@
 import fastify from "fastify";
-import { getAllBookmarks, insertBookmarks, deleteActiveToken } from "./database.ts";
+import {
+  getAllBookmarks,
+  insertBookmarks,
+  deleteActiveToken,
+} from "./database.ts";
 import { z } from "zod";
 import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import type { BookmarkWithContent } from "./types.ts";
-import {
-  createToken,
-  validateToken,
-} from "./authentication.ts";
+import { createToken, validateToken } from "./authentication.ts";
 
 export const server = fastify({ logger: getLoggerConfig() });
 
