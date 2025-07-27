@@ -5,7 +5,10 @@ import {
   deleteActiveToken,
 } from "./database.ts";
 import { z } from "zod";
-import { getBookmarkDataFromUrl, insertManyBookmarks } from "./domains/bookmarks.ts";
+import {
+  getBookmarkDataFromUrl,
+  insertManyBookmarks,
+} from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import type { BookmarkWithContent } from "./types.ts";
