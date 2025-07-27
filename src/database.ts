@@ -43,7 +43,7 @@ export async function getAllBookmarks(
   const db = await getDb();
 
   let sql = "SELECT * FROM bookmarks";
-  let args: any[] = [];
+  let args: unknown[] = [];
   if (searchEmbedding) {
     sql =
       "SELECT id, url, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
