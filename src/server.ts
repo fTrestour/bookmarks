@@ -41,7 +41,7 @@ server.get("/bookmarks", async (request) => {
 
 server.post("/bookmarks", {
   preHandler: assertAuthorized,
-  handler: async (request, reply) => {
+  handler: async (request) => {
     const bodySchema = z.object({
       url: z.string().url(),
     });
@@ -56,7 +56,7 @@ server.post("/bookmarks", {
 
 server.post("/bookmarks/batch", {
   preHandler: assertAuthorized,
-  handler: async (request, reply) => {
+  handler: async (request) => {
     const bodySchema = z.object({
       url: z.string().url(),
     });
