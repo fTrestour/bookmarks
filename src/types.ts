@@ -6,16 +6,7 @@ export const bookmarkSchema = z.object({
   title: z.string(),
 });
 
-export const bookmarkWithContentSchema = z.object({
-  id: z.string(),
-  url: z.string(),
-  title: z.string(),
-  content: z.string(),
-  embedding: z.array(z.number()),
-});
-
 export const bookmarksSchema = z.array(bookmarkSchema);
-export const bookmarksWithContentSchema = z.array(bookmarkWithContentSchema);
 
 export type Bookmark = z.infer<typeof bookmarkSchema>;
 

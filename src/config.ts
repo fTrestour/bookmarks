@@ -10,7 +10,9 @@ export function getConfig(): {
   scrapingAiModel: string;
   embeddingModel: string;
 } {
-  const port = parseInt(process.env.PORT ?? "3000");
+  const rawPort = process.env.PORT;
+  const port = Number.isInteger(Number(rawPort)) ? Number(rawPort) : 3000;
+
   const host = process.env.HOST ?? "localhost";
   const env = process.env.NODE_ENV ?? "development";
   const dbUri = process.env.DATABASE_URL ?? "file:sqlite/db.sqlite";
