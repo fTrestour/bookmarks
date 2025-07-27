@@ -26,13 +26,12 @@ ${content}`,
 
 export async function getPageMetadata(
   content: string,
-): Promise<{ title: string; author: string | null }> {
+): Promise<{ title: string }> {
   const { scrappingAiModel } = getConfig();
   const { object } = await generateObject({
     model: openai(scrappingAiModel),
     schema: z.object({
       title: z.string().describe("The title of the article."),
-      author: z.string().describe("The author of the article.").nullable(),
     }),
     prompt: content,
   });

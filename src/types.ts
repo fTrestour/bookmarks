@@ -4,14 +4,12 @@ export const bookmarkSchema = z.object({
   id: z.string(),
   url: z.string(),
   title: z.string(),
-  author: z.string(),
 });
 
 export const bookmarkWithContentSchema = z.object({
   id: z.string(),
   url: z.string(),
   title: z.string(),
-  author: z.string(),
   content: z.string(),
   embedding: z.array(z.number()),
 });

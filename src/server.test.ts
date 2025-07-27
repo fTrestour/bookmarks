@@ -34,7 +34,6 @@ describe("api", () => {
 
     getPageMetadataSpy.mockReset().mockResolvedValue({
       title: "Mock Title",
-      author: "Mock Author",
     });
 
     embedTextSpy.mockReset().mockResolvedValue(defaultEmbedding);
@@ -56,7 +55,6 @@ describe("api", () => {
         id: randomUUID(),
         url: "https://example.com/" + randomUUID(),
         title: "Example Title",
-        author: "Example Author",
         content: "Example content",
         embedding: randomEmbedding(),
       },
@@ -64,7 +62,6 @@ describe("api", () => {
         id: randomUUID(),
         url: "https://google.com/" + randomUUID(),
         title: "Google Title",
-        author: "Google Author",
         content: "Google content",
         embedding: randomEmbedding(),
       },
@@ -86,7 +83,6 @@ describe("api", () => {
       id: randomUUID(),
       url: "https://example.com/" + randomUUID(),
       title: "Example Title 1",
-      author: "Example Author 1",
       content: "Example content",
       embedding: defaultEmbedding,
     };
@@ -94,7 +90,6 @@ describe("api", () => {
       id: randomUUID(),
       url: "https://google.com/" + randomUUID(),
       title: "Google Title",
-      author: "Google Author",
       content: "Google content",
       embedding: randomEmbedding(),
     };
@@ -102,7 +97,6 @@ describe("api", () => {
       id: randomUUID(),
       url: "https://example.com/" + randomUUID(),
       title: "Example Title 2",
-      author: "Example Author 2",
       content: "Example content 2",
       embedding: randomEmbedding(),
     };

@@ -18,7 +18,7 @@ async function getDb() {
 
   const newDb = createClient({ url: dbUri });
   await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE, title TEXT, author TEXT, content TEXT, embedding F32_BLOB(1536))",
+    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY, url TEXT UNIQUE, title TEXT, content TEXT, embedding F32_BLOB(1536))",
   );
 
   db = newDb;
@@ -33,12 +33,11 @@ export async function insertBookmarks(
 
   await db.batch(
     bookmarks.map((bookmark) => ({
-      sql: `INSERT INTO bookmarks (id, url, title, author, content, embedding) VALUES (?, ?, ?, ?, ?, vector32(?))`,
+      sql: `INSERT INTO bookmarks (id, url, title, content, embedding) VALUES (?, ?, ?, ?, vector32(?))`,
       args: [
         bookmark.id,
         bookmark.url,
         bookmark.title,
-        bookmark.author,
         bookmark.content,
         JSON.stringify(bookmark.embedding),
       ],
@@ -56,7 +55,7 @@ export async function getAllBookmarks(
   let args: InValue[] = [];
   if (searchEmbedding) {
     sql =
-      "SELECT id, url, title, author, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
+      "SELECT id, url, title, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
     args = [JSON.stringify(searchEmbedding)];
   }
 
