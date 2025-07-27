@@ -38,13 +38,13 @@ describe("api", () => {
         id: "1",
         url: "https://example.com",
         content: "Example content",
-        embedding: [1, 2, 3],
+        embedding: [],
       },
       {
         id: "2",
         url: "https://google.com",
         content: "Google content",
-        embedding: [4, 5, 6],
+        embedding: [],
       },
     ];
 

@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
-import { getPageContent } from "../src/scrapper.ts";
-import type { Bookmark } from "../src/types.ts";
+import { getPageContent } from "../scrapper.ts";
+import type { Bookmark } from "../types.ts";
 
 export async function getBookmarkDataFromUrl(url: string): Promise<Bookmark> {
   const content = await getPageContent(url);
