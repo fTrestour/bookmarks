@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const bookmarkSchema = z.object({
-  id: z.string(),
-  url: z.string(),
-  title: z.string(),
+  id: z.string().uuid(),
+  url: z.string().url(),
+  title: z.string().min(1),
 });
 
 export const bookmarksSchema = z.array(bookmarkSchema);
@@ -14,3 +14,10 @@ export type BookmarkWithContent = Bookmark & {
   content: string;
   embedding: number[];
 };
+
+export const activeTokenSchema = z.object({
+  jti: z.string().uuid(),
+  name: z.string().min(1).trim(),
+});
+
+export type ActiveToken = z.infer<typeof activeTokenSchema>;
