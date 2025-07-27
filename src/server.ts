@@ -4,8 +4,27 @@ import { parse } from "./types.ts";
 import { z } from "zod";
 import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
 import { embedText } from "./embeddings.ts";
+import { getConfig } from "./config.ts";
 
-export const server = fastify();
+const { env } = getConfig();
+
+let loggerConfig;
+if (env === "production") {
+  loggerConfig = true; // JSON logging in production
+} else if (env === "test") {
+  loggerConfig = false; // No logging in test
+} else {
+  loggerConfig = {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true
+      }
+    }
+  }; // Pretty logging for development
+}
+
+export const server = fastify({ logger: loggerConfig });
 
 server.get("/", () => {
   return "👋";
