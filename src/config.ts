@@ -4,9 +4,9 @@ import { z } from "zod";
 config();
 
 const configSchema = z.object({
-  port: z.number().int().positive(),
+  port: z.number({ coerce: true }).int().positive(),
   host: z.string().min(1),
-  env: z.string().min(1),
+  env: z.enum(["development", "production", "test"]),
   dbUri: z.string().min(1),
   scrapingAiModel: z.string().min(1),
   embeddingModel: z.string().min(1),
@@ -24,13 +24,8 @@ const defaultConfig = {
 } as const;
 
 export function getConfig(): z.infer<typeof configSchema> {
-  const rawPort = process.env.PORT;
-  const port = Number.isInteger(Number(rawPort))
-    ? Number(rawPort)
-    : defaultConfig.port;
-
   const configData = {
-    port,
+    port: process.env.PORT ?? defaultConfig.port,
     host: process.env.HOST ?? defaultConfig.host,
     env: process.env.NODE_ENV ?? defaultConfig.env,
     dbUri: process.env.DATABASE_URL ?? defaultConfig.dbUri,
