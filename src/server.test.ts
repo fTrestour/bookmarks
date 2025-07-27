@@ -43,13 +43,13 @@ describe("api", () => {
         id: "1",
         url: "https://example.com",
         content: "Example content",
-        embedding: [],
+        embedding: [0.1, 0.2, 0.3],
       },
       {
         id: "2",
         url: "https://google.com",
         content: "Google content",
-        embedding: [],
+        embedding: [0.4, 0.5, 0.6],
       },
     ];
 
