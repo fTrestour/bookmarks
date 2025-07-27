@@ -13,9 +13,6 @@ export async function getBookmarkDataFromUrl(
   }
 
   const content = await getPageContent(url);
-  // …rest of the implementation
-}
-  const content = await getPageContent(url);
 
   const [embedding, metadata] = await Promise.all([
     embedText(content),
