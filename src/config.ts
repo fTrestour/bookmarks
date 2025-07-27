@@ -13,34 +13,28 @@ const configSchema = z.object({
   jwtSecret: z.string().min(1),
 });
 
-export function getConfig(): {
-  port: number;
-  host: string;
-  env: string;
-  dbUri: string;
-  scrapingAiModel: string;
-  embeddingModel: string;
-  jwtSecret: string;
-} {
-  const rawPort = process.env.PORT;
-  const port = Number.isInteger(Number(rawPort)) ? Number(rawPort) : 3000;
+const defaultConfig = {
+  port: 3000,
+  host: "localhost",
+  env: "development",
+  dbUri: "file:sqlite/db.sqlite",
+  scrapingAiModel: "gpt-4.1-mini",
+  embeddingModel: "text-embedding-3-small",
+  jwtSecret: "dev_secret",
+} as const;
 
-  const host = process.env.HOST ?? "localhost";
-  const env = process.env.NODE_ENV ?? "development";
-  const dbUri = process.env.DATABASE_URL ?? "file:sqlite/db.sqlite";
-  const scrapingAiModel = process.env.SCRAPING_AI_MODEL ?? "gpt-4.1-mini";
-  const embeddingModel =
-    process.env.AI_EMBEDDING_MODEL ?? "text-embedding-3-small";
-  const jwtSecret = process.env.JWT_SECRET ?? "dev_secret";
+export function getConfig(): z.infer<typeof configSchema> {
+  const rawPort = process.env.PORT;
+  const port = Number.isInteger(Number(rawPort)) ? Number(rawPort) : defaultConfig.port;
 
   const configData = {
     port,
-    host,
-    env,
-    dbUri,
-    scrapingAiModel,
-    embeddingModel,
-    jwtSecret,
+    host: process.env.HOST ?? defaultConfig.host,
+    env: process.env.NODE_ENV ?? defaultConfig.env,
+    dbUri: process.env.DATABASE_URL ?? defaultConfig.dbUri,
+    scrapingAiModel: process.env.SCRAPING_AI_MODEL ?? defaultConfig.scrapingAiModel,
+    embeddingModel: process.env.AI_EMBEDDING_MODEL ?? defaultConfig.embeddingModel,
+    jwtSecret: process.env.JWT_SECRET ?? defaultConfig.jwtSecret,
   };
 
   return configSchema.parse(configData);
