@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { getConfig } from "./config.ts";
 import { insertActiveToken, isActiveToken } from "./database.ts";
 import type { ActiveToken } from "./types.ts";
@@ -32,4 +33,18 @@ export async function validateToken(token: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function assertAuthorized(request: FastifyRequest, reply: FastifyReply) {
+  const header = request.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    reply.code(401).send({ error: "Unauthorized" });
+    return false;
+  }
+  const ok = await validateToken(header.slice(7));
+  if (!ok) {
+    reply.code(401).send({ error: "Unauthorized" });
+    return false;
+  }
+  return true;
 }
