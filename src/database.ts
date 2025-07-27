@@ -1,6 +1,6 @@
 import { getConfig } from "./config.ts";
 import type { BookmarkWithContent, Bookmark } from "./types.ts";
-import { bookmarksSchema } from "./types.ts";
+import { bookmarksWithContentSchema } from "./types.ts";
 import {
   type Client,
   createClient,
@@ -49,7 +49,7 @@ export async function insertBookmarks(
 
 export async function getAllBookmarks(
   searchEmbedding?: number[],
-): Promise<Bookmark[]> {
+): Promise<BookmarkWithContent[]> {
   const db = await getDb();
 
   let sql = "SELECT * FROM bookmarks";
@@ -61,7 +61,7 @@ export async function getAllBookmarks(
   }
 
   const result = await db.execute({ sql, args });
-  return bookmarksSchema.parse(toObject(result));
+  return bookmarksWithContentSchema.parse(toObject(result));
 }
 
 function toObject({ columns, rows }: ResultSet) {
