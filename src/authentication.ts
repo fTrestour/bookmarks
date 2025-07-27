@@ -14,7 +14,6 @@ export async function createToken(name: string): Promise<{
   const payload: ActiveToken = { jti, name };
   const token = jwt.sign(payload, jwtSecret, {
     algorithm: "HS256",
-    jwtid: jti,
   });
   await insertActiveToken(payload);
   return { payload, token };

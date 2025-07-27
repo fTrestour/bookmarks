@@ -6,6 +6,7 @@ import * as config from "./config";
 import * as scrapper from "./ai/scrapper.ts";
 import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
+import { createToken } from "./authentication.ts";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
@@ -20,7 +21,12 @@ describe("api", () => {
     randomInt(0, 100) / 100,
   ];
 
-  let authHeader: { authorization: string };
+  let testToken: string;
+  const headers = () => {
+    return {
+      authorization: `Bearer ${testToken}`,
+    };
+  };
 
   beforeEach(async () => {
     getConfigSpy.mockReset().mockReturnValue({
@@ -41,14 +47,8 @@ describe("api", () => {
 
     embedTextSpy.mockReset().mockResolvedValue(defaultEmbedding);
 
-    const tokenResp = await server.inject({
-      method: "POST",
-      url: "/tokens",
-      payload: { name: "test-token" },
-    });
-    authHeader = {
-      authorization: `Bearer ${(JSON.parse(tokenResp.body) as { token: string }).token}`,
-    };
+    const { token } = await createToken("test-token");
+    testToken = token;
   });
 
   it("accepts calls on /", async () => {
@@ -61,148 +61,193 @@ describe("api", () => {
     expect(response.body).toBe("👋");
   });
 
-  it("returns bookmarks on /bookmarks", async () => {
-    const testBookmarks = [
-      {
+  describe("GET /bookmarks", () => {
+    it("returns bookmarks on /bookmarks", async () => {
+      const testBookmarks = [
+        {
+          id: randomUUID(),
+          url: "https://example.com/" + randomUUID(),
+          title: "Example Title",
+          content: "Example content",
+          embedding: randomEmbedding(),
+        },
+        {
+          id: randomUUID(),
+          url: "https://google.com/" + randomUUID(),
+          title: "Google Title",
+          content: "Google content",
+          embedding: randomEmbedding(),
+        },
+      ];
+
+      await database.insertBookmarks(testBookmarks);
+
+      const response = await server.inject({
+        method: "GET",
+        url: "/bookmarks",
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual(
+        testBookmarks.map((b) => ({
+          id: b.id,
+          url: b.url,
+          title: b.title,
+        })),
+      );
+    });
+
+    it("searches bookmarks on /bookmarks with search query", async () => {
+      const example1 = {
         id: randomUUID(),
         url: "https://example.com/" + randomUUID(),
-        title: "Example Title",
+        title: "Example Title 1",
         content: "Example content",
-        embedding: randomEmbedding(),
-      },
-      {
+        embedding: defaultEmbedding,
+      };
+      const google = {
         id: randomUUID(),
         url: "https://google.com/" + randomUUID(),
         title: "Google Title",
         content: "Google content",
         embedding: randomEmbedding(),
-      },
-    ];
+      };
+      const example2 = {
+        id: randomUUID(),
+        url: "https://example.com/" + randomUUID(),
+        title: "Example Title 2",
+        content: "Example content 2",
+        embedding: randomEmbedding(),
+      };
 
-    await database.insertBookmarks(testBookmarks);
+      const testBookmarks = [example1, google, example2];
 
-    const response = await server.inject({
-      method: "GET",
-      url: "/bookmarks",
-    });
+      await database.insertBookmarks(testBookmarks);
 
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual(
-      testBookmarks.map((b) => ({
-        id: b.id,
-        url: b.url,
-        title: b.title,
-      })),
-    );
-  });
+      const searchResp = await server.inject({
+        method: "GET",
+        url: "/bookmarks",
+        query: { search: "Default embedding" },
+      });
 
-  it("searches bookmarks on /bookmarks with search query", async () => {
-    const example1 = {
-      id: randomUUID(),
-      url: "https://example.com/" + randomUUID(),
-      title: "Example Title 1",
-      content: "Example content",
-      embedding: defaultEmbedding,
-    };
-    const google = {
-      id: randomUUID(),
-      url: "https://google.com/" + randomUUID(),
-      title: "Google Title",
-      content: "Google content",
-      embedding: randomEmbedding(),
-    };
-    const example2 = {
-      id: randomUUID(),
-      url: "https://example.com/" + randomUUID(),
-      title: "Example Title 2",
-      content: "Example content 2",
-      embedding: randomEmbedding(),
-    };
-
-    const testBookmarks = [example1, google, example2];
-
-    await database.insertBookmarks(testBookmarks);
-
-    const searchResp = await server.inject({
-      method: "GET",
-      url: "/bookmarks",
-      query: { search: "Default embedding" },
-    });
-
-    expect(searchResp.statusCode).toBe(200);
-    expect((JSON.parse(searchResp.body) as unknown[])[0]).toEqual({
-      id: example1.id,
-      url: example1.url,
-      title: example1.title,
+      expect(searchResp.statusCode).toBe(200);
+      expect((JSON.parse(searchResp.body) as unknown[])[0]).toEqual({
+        id: example1.id,
+        url: example1.url,
+        title: example1.title,
+      });
     });
   });
 
-  it("creates a bookmark on POST /bookmarks", async () => {
-    const url = "https://example.org/" + randomUUID();
-    const response = await server.inject({
-      method: "POST",
-      url: "/bookmarks",
-      headers: authHeader,
-      payload: {
-        url,
-      },
+  describe("POST /bookmarks", () => {
+    it("rejects unauthorized requests", async () => {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/bookmarks",
+        payload: { url: "https://example.com/" + randomUUID() },
+      });
+      expect(resp.statusCode).toBe(401);
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual({ success: true });
-    expect(embedTextSpy).toHaveBeenCalled();
-    expect(getPageMetadataSpy).toHaveBeenCalled();
+    it("creates a bookmark", async () => {
+      const url = "https://example.org/" + randomUUID();
+      const response = await server.inject({
+        method: "POST",
+        url: "/bookmarks",
+        headers: headers(),
+        payload: {
+          url,
+        },
+      });
 
-    const bookmarks = await database.getAllBookmarks(null);
-    expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining([url]));
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual({ success: true });
+      expect(embedTextSpy).toHaveBeenCalled();
+      expect(getPageMetadataSpy).toHaveBeenCalled();
+
+      const bookmarks = await database.getAllBookmarks(null);
+      expect(bookmarks.map((b) => b.url)).toEqual(
+        expect.arrayContaining([url]),
+      );
+    });
   });
 
-  it("creates multiple bookmarks on POST /bookmarks/batch", async () => {
-    const urls = [
-      "https://batch-example1.org/" + randomUUID(),
-      "https://batch-example2.org/" + randomUUID(),
-    ];
-    const response = await server.inject({
-      method: "POST",
-      url: "/bookmarks/batch",
-      headers: authHeader,
-      payload: urls.map((url) => ({ url })),
+  describe("POST /bookmarks/batch", () => {
+    it("rejects unauthorized requests", async () => {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/bookmarks/batch",
+        payload: [{ url: "https://example.com/" + randomUUID() }],
+      });
+      expect(resp.statusCode).toBe(401);
     });
 
-    expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual(
-      expect.objectContaining({ success: true }),
-    );
-    expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
-    expect(getPageMetadataSpy).toHaveBeenCalledTimes(urls.length);
+    it("creates multiple bookmarks on POST /bookmarks/batch", async () => {
+      const urls = [
+        "https://batch-example1.org/" + randomUUID(),
+        "https://batch-example2.org/" + randomUUID(),
+      ];
+      const response = await server.inject({
+        method: "POST",
+        url: "/bookmarks/batch",
+        headers: headers(),
+        payload: urls.map((url) => ({ url })),
+      });
 
-    const bookmarks = await database.getAllBookmarks(null);
-    expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
+      expect(response.statusCode).toBe(200);
+      expect(JSON.parse(response.body)).toEqual(
+        expect.objectContaining({ success: true }),
+      );
+      expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
+      expect(getPageMetadataSpy).toHaveBeenCalledTimes(urls.length);
+
+      const bookmarks = await database.getAllBookmarks(null);
+      expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
+    });
   });
 
-  it("rejects unauthorized bookmark creation", async () => {
-    const resp = await server.inject({
-      method: "POST",
-      url: "/bookmarks",
-      payload: { url: "https://example.com/" + randomUUID() },
+  describe("DELETE /tokens/:jti", () => {
+    it("deletes a token", async () => {
+      const { jti } = JSON.parse(
+        (
+          await server.inject({
+            method: "POST",
+            url: "/tokens",
+            payload: { name: "to-delete" },
+          })
+        ).body,
+      );
+      const del = await server.inject({
+        method: "DELETE",
+        url: `/tokens/${jti}`,
+      });
+      expect(del.statusCode).toBe(200);
     });
-    expect(resp.statusCode).toBe(401);
   });
 
-  it("deletes a token", async () => {
-    const { jti } = JSON.parse(
-      (
-        await server.inject({
-          method: "POST",
-          url: "/tokens",
-          payload: { name: "to-delete" },
-        })
-      ).body,
-    );
-    const del = await server.inject({
-      method: "DELETE",
-      url: `/tokens/${jti}`,
+  describe("POST /tokens", () => {
+    it("rejects unauthorized requests", async () => {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/tokens",
+        payload: { name: "test-token" },
+      });
+
+      expect(resp.statusCode).toBe(401);
     });
-    expect(del.statusCode).toBe(200);
+
+    it("creates a token", async () => {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/tokens",
+        headers: headers(),
+        payload: { name: "test-token" },
+      });
+
+      expect(resp.statusCode).toBe(200);
+      expect(JSON.parse(resp.body)).toEqual(
+        expect.objectContaining({ token: expect.any(String) }),
+      );
+    });
   });
 });

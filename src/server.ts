@@ -12,10 +12,14 @@ server.get("/", () => {
   return "👋";
 });
 
-server.post("/tokens", async (request) => {
-  const { name } = z.object({ name: z.string() }).parse(request.body);
-  const { token, payload } = await createToken(name);
-  return { token, jti: payload.jti };
+server.post("/tokens", {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  preHandler: assertAuthorized,
+  handler: async (request) => {
+    const { name } = z.object({ name: z.string() }).parse(request.body);
+    const { token, payload } = await createToken(name);
+    return { token, jti: payload.jti };
+  },
 });
 
 server.delete("/tokens/:jti", async (request) => {
@@ -34,7 +38,8 @@ server.get("/bookmarks", async (request) => {
 });
 
 server.post("/bookmarks", {
-  preHandler: void assertAuthorized,
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  preHandler: assertAuthorized,
   handler: async (request) => {
     const bodySchema = z.object({
       url: z.string().url(),
@@ -47,7 +52,8 @@ server.post("/bookmarks", {
 });
 
 server.post("/bookmarks/batch", {
-  preHandler: void assertAuthorized,
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
+  preHandler: assertAuthorized,
   handler: async (request) => {
     const bodySchema = z.object({
       url: z.string().url(),
