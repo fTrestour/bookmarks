@@ -1,10 +1,10 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
-import { validateToken } from "./authentication.js";
+import { validateToken } from "./authentication.ts";
 
 export async function assertAuthorized(
   request: FastifyRequest,
   reply: FastifyReply,
-) {
+): Promise<void> {
   const header = request.headers.authorization;
 
   if (!header?.startsWith("Bearer ")) {
