@@ -25,16 +25,20 @@ const defaultConfig = {
 
 export function getConfig(): z.infer<typeof configSchema> {
   const configData = {
-    port: process.env.PORT ?? defaultConfig.port,
-    host: process.env.HOST ?? defaultConfig.host,
-    env: process.env.NODE_ENV ?? defaultConfig.env,
-    dbUri: process.env.DATABASE_URL ?? defaultConfig.dbUri,
-    scrapingAiModel:
-      process.env.SCRAPING_AI_MODEL ?? defaultConfig.scrapingAiModel,
-    embeddingModel:
-      process.env.AI_EMBEDDING_MODEL ?? defaultConfig.embeddingModel,
-    jwtSecret: process.env.JWT_SECRET ?? defaultConfig.jwtSecret,
+    port: process.env.PORT,
+    host: process.env.HOST,
+    env: process.env.NODE_ENV,
+    dbUri: process.env.DATABASE_URL,
+    scrapingAiModel: process.env.SCRAPING_AI_MODEL,
+    embeddingModel: process.env.AI_EMBEDDING_MODEL,
+    jwtSecret: process.env.JWT_SECRET,
   };
 
-  return configSchema.parse(configData);
+  let parsedConfig = configSchema.partial().parse(configData);
+
+  if (parsedConfig.env !== "production") {
+    parsedConfig = { ...parsedConfig, ...defaultConfig };
+  }
+
+  return configSchema.parse(parsedConfig);
 }

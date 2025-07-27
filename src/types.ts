@@ -17,7 +17,7 @@ export type BookmarkWithContent = Bookmark & {
 
 export const activeTokenSchema = z.object({
   jti: z.string().uuid(),
-  name: z.string().min(1),
+  name: z.string().min(1).trim(),
 });
 
 export type ActiveToken = z.infer<typeof activeTokenSchema>;
