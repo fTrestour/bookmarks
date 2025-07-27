@@ -1,7 +1,6 @@
 import { getConfig } from "./config.ts";
 import { server } from "./server.ts";
 
-// Start the server
 const start = async () => {
   try {
     const { port, baseUrl } = getConfig();

@@ -1,5 +1,6 @@
 import { getConfig } from "./config.ts";
-import { bookmarksSchema, parse, type Bookmark } from "./types.ts";
+import type { BookmarkWithContent, Bookmark } from "./types.ts";
+import { bookmarksSchema } from "./types.ts";
 import {
   type Client,
   createClient,
@@ -25,7 +26,9 @@ async function getDb() {
   return db;
 }
 
-export async function insertBookmarks(bookmarks: Bookmark[]): Promise<void> {
+export async function insertBookmarks(
+  bookmarks: BookmarkWithContent[],
+): Promise<void> {
   const db = await getDb();
 
   await db.batch(
@@ -56,7 +59,7 @@ export async function getAllBookmarks(
   }
 
   const result = await db.execute({ sql, args });
-  return parse(bookmarksSchema, toObject(result));
+  return bookmarksSchema.parse(toObject(result));
 }
 
 function toObject({ columns, rows }: ResultSet) {
