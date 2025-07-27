@@ -1,6 +1,6 @@
 import { getConfig } from "./config.ts";
 import { bookmarksSchema, parse, type Bookmark } from "./types.ts";
-import { type Client, createClient, type ResultSet } from "@libsql/client";
+import { type Client, createClient, type ResultSet, type InValue } from "@libsql/client";
 
 let db: Client | null = null;
 async function getDb() {
@@ -43,7 +43,7 @@ export async function getAllBookmarks(
   const db = await getDb();
 
   let sql = "SELECT * FROM bookmarks";
-  let args: unknown[] = [];
+  let args: InValue[] = [];
   if (searchEmbedding) {
     sql =
       "SELECT id, url, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
