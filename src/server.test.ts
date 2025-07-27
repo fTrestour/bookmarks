@@ -10,6 +10,7 @@ import { randomInt, randomUUID } from "crypto";
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
   const getPageContentSpy = vi.spyOn(scrapper, "getPageContent");
+  const getPageMetadataSpy = vi.spyOn(scrapper, "getPageMetadata");
   const embedTextSpy = vi.spyOn(embeddings, "embedText");
 
   const defaultEmbedding = [0.1, 0.2, 0.3];
@@ -31,6 +32,11 @@ describe("api", () => {
 
     getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
 
+    getPageMetadataSpy.mockReset().mockResolvedValue({
+      title: "Mock Title",
+      author: "Mock Author",
+    });
+
     embedTextSpy.mockReset().mockResolvedValue(defaultEmbedding);
   });
 
@@ -49,12 +55,16 @@ describe("api", () => {
       {
         id: randomUUID(),
         url: "https://example.com/" + randomUUID(),
+        title: "Example Title",
+        author: "Example Author",
         content: "Example content",
         embedding: randomEmbedding(),
       },
       {
         id: randomUUID(),
         url: "https://google.com/" + randomUUID(),
+        title: "Google Title",
+        author: "Google Author",
         content: "Google content",
         embedding: randomEmbedding(),
       },
@@ -75,18 +85,24 @@ describe("api", () => {
     const example1 = {
       id: randomUUID(),
       url: "https://example.com/" + randomUUID(),
+      title: "Example Title 1",
+      author: "Example Author 1",
       content: "Example content",
       embedding: defaultEmbedding,
     };
     const google = {
       id: randomUUID(),
       url: "https://google.com/" + randomUUID(),
+      title: "Google Title",
+      author: "Google Author",
       content: "Google content",
       embedding: randomEmbedding(),
     };
     const example2 = {
       id: randomUUID(),
       url: "https://example.com/" + randomUUID(),
+      title: "Example Title 2",
+      author: "Example Author 2",
       content: "Example content 2",
       embedding: randomEmbedding(),
     };
@@ -118,6 +134,7 @@ describe("api", () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ success: true });
     expect(embedTextSpy).toHaveBeenCalled();
+    expect(getPageMetadataSpy).toHaveBeenCalled();
 
     const bookmarks = await database.getAllBookmarks();
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining([url]));
@@ -137,6 +154,7 @@ describe("api", () => {
     expect(response.statusCode).toBe(200);
     expect(JSON.parse(response.body)).toEqual({ success: true });
     expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
+    expect(getPageMetadataSpy).toHaveBeenCalledTimes(urls.length);
 
     const bookmarks = await database.getAllBookmarks();
     expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
