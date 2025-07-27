@@ -1,6 +1,11 @@
 import { getConfig } from "./config.ts";
 import { bookmarksSchema, parse, type Bookmark } from "./types.ts";
-import { type Client, createClient, type ResultSet, type InValue } from "@libsql/client";
+import {
+  type Client,
+  createClient,
+  type ResultSet,
+  type InValue,
+} from "@libsql/client";
 
 let db: Client | null = null;
 async function getDb() {
