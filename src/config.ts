@@ -25,15 +25,19 @@ const defaultConfig = {
 
 export function getConfig(): z.infer<typeof configSchema> {
   const rawPort = process.env.PORT;
-  const port = Number.isInteger(Number(rawPort)) ? Number(rawPort) : defaultConfig.port;
+  const port = Number.isInteger(Number(rawPort))
+    ? Number(rawPort)
+    : defaultConfig.port;
 
   const configData = {
     port,
     host: process.env.HOST ?? defaultConfig.host,
     env: process.env.NODE_ENV ?? defaultConfig.env,
     dbUri: process.env.DATABASE_URL ?? defaultConfig.dbUri,
-    scrapingAiModel: process.env.SCRAPING_AI_MODEL ?? defaultConfig.scrapingAiModel,
-    embeddingModel: process.env.AI_EMBEDDING_MODEL ?? defaultConfig.embeddingModel,
+    scrapingAiModel:
+      process.env.SCRAPING_AI_MODEL ?? defaultConfig.scrapingAiModel,
+    embeddingModel:
+      process.env.AI_EMBEDDING_MODEL ?? defaultConfig.embeddingModel,
     jwtSecret: process.env.JWT_SECRET ?? defaultConfig.jwtSecret,
   };
 
