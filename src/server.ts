@@ -51,7 +51,7 @@ server.post("/bookmarks", {
 
     await insertBookmarks([bookmark]);
     return { success: true };
-  }
+  },
 });
 
 server.post("/bookmarks/batch", {
@@ -105,5 +105,5 @@ server.post("/bookmarks/batch", {
         bookmarksInserted: bookmarks.length,
       },
     };
-  }
+  },
 });
