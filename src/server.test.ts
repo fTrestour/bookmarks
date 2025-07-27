@@ -75,7 +75,13 @@ describe("api", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual(testBookmarks);
+    expect(JSON.parse(response.body)).toEqual(
+      testBookmarks.map((b) => ({
+        id: b.id,
+        url: b.url,
+        title: b.title,
+      })),
+    );
   });
 
   it("searches bookmarks on /bookmarks with search query", async () => {
@@ -112,7 +118,11 @@ describe("api", () => {
     });
 
     expect(searchResp.statusCode).toBe(200);
-    expect((JSON.parse(searchResp.body) as unknown[])[0]).toEqual(example1);
+    expect((JSON.parse(searchResp.body) as unknown[])[0]).toEqual({
+      id: example1.id,
+      url: example1.url,
+      title: example1.title,
+    });
   });
 
   it("creates a bookmark on POST /bookmarks", async () => {
