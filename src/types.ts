@@ -15,6 +15,11 @@ export type BookmarkWithContent = Bookmark & {
   embedding: number[];
 };
 
+export const activeTokenSchema = z.object({
+  jti: z.string(),
+  name: z.string(),
+});
+
 export interface ActiveToken {
   jti: string;
   name: string;

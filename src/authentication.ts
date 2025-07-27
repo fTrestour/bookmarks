@@ -4,6 +4,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { getConfig } from "./config.ts";
 import { insertActiveToken, isActiveToken } from "./database.ts";
 import type { ActiveToken } from "./types.ts";
+import { activeTokenSchema } from "./types.ts";
 
 export async function createToken(name: string): Promise<{
   payload: ActiveToken;
@@ -22,8 +23,8 @@ export async function createToken(name: string): Promise<{
 
 export function readToken(token: string): ActiveToken {
   const { jwtSecret } = getConfig();
-  const decoded = jwt.verify(token, jwtSecret) as unknown as ActiveToken;
-  return { jti: decoded.jti, name: decoded.name };
+  const decoded = jwt.verify(token, jwtSecret);
+  return activeTokenSchema.parse(decoded);
 }
 
 export async function validateToken(token: string): Promise<boolean> {
