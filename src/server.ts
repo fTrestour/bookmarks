@@ -2,7 +2,7 @@ import fastify from "fastify";
 import { getAllBookmarks, insertBookmarks } from "./database.ts";
 import { z } from "zod";
 import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
-import { embedText } from "./embeddings.ts";
+import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 
 export const server = fastify({ logger: getLoggerConfig() });

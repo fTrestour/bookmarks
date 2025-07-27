@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
-import { getPageContent } from "../scrapper.ts";
-import { embedText } from "../embeddings.ts";
+import { getPageContent } from "../ai/scrapper.ts";
+import { embedText } from "../ai/embeddings.ts";
 import type { BookmarkWithContent } from "../types.ts";
 
 export async function getBookmarkDataFromUrl(

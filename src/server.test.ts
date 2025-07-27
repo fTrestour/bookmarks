@@ -3,8 +3,8 @@ import { server } from "./server.ts";
 import { vi } from "vitest";
 import * as database from "./database";
 import * as config from "./config";
-import * as scrapper from "./scrapper";
-import * as embeddings from "./embeddings";
+import * as scrapper from "./ai/scrapper.ts";
+import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
 
 describe("api", () => {

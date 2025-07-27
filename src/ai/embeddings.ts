@@ -1,6 +1,6 @@
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { getConfig } from "./config.ts";
+import { getConfig } from "../config.ts";
 
 export async function embedText(text: string): Promise<number[]> {
   const { embeddingModel } = getConfig();
