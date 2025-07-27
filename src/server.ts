@@ -1,14 +1,7 @@
 import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
-import {
-  getAllBookmarks,
-  insertBookmarks,
-  deleteActiveToken,
-} from "./database.ts";
+import { getAllBookmarks, deleteActiveToken } from "./database.ts";
 import { z } from "zod";
-import {
-  getBookmarkDataFromUrl,
-  insertManyBookmarks,
-} from "./domains/bookmarks.ts";
+import { saveBookmarks } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import { createToken, validateToken } from "./authentication.ts";
@@ -48,9 +41,7 @@ server.post("/bookmarks", {
     });
     const body = bodySchema.parse(request.body);
 
-    const bookmark = await getBookmarkDataFromUrl(body.url);
-
-    await insertBookmarks([bookmark]);
+    await saveBookmarks([body.url]);
     return { success: true };
   },
 });
@@ -64,11 +55,10 @@ server.post("/bookmarks/batch", {
     const batchBodySchema = z.array(bodySchema);
     const body = batchBodySchema.parse(request.body);
 
-    const urls = body.map((item) => item.url);
-    const stats = await insertManyBookmarks(urls);
+    const stats = await saveBookmarks(body.map((item) => item.url));
 
     return {
-      success: true,
+      success: stats.totalFailed === 0,
       stats,
     };
   },

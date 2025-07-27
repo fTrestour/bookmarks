@@ -4,32 +4,7 @@ import { embedText } from "../ai/embeddings.ts";
 import { insertBookmarks } from "../database.ts";
 import type { BookmarkWithContent } from "../types.ts";
 
-export async function getBookmarkDataFromUrl(
-  url: string,
-): Promise<BookmarkWithContent> {
-  try {
-    new URL(url);
-  } catch {
-    throw new Error(`Invalid URL format: ${url}`);
-  }
-
-  const content = await getPageContent(url);
-
-  const [embedding, metadata] = await Promise.all([
-    embedText(content),
-    getPageMetadata(content),
-  ]);
-
-  return {
-    id: randomUUID(),
-    url,
-    content,
-    embedding,
-    ...metadata,
-  };
-}
-
-export async function insertManyBookmarks(urls: string[]) {
+export async function saveBookmarks(urls: string[]) {
   const bookmarks: BookmarkWithContent[] = [];
   const BATCH_SIZE = 20;
   let totalProcessed = 0;
@@ -68,5 +43,30 @@ export async function insertManyBookmarks(urls: string[]) {
     totalSuccess,
     totalFailed,
     bookmarksInserted: bookmarks.length,
+  };
+}
+
+async function getBookmarkDataFromUrl(
+  url: string,
+): Promise<BookmarkWithContent> {
+  try {
+    new URL(url);
+  } catch {
+    throw new Error(`Invalid URL format: ${url}`);
+  }
+
+  const content = await getPageContent(url);
+
+  const [embedding, metadata] = await Promise.all([
+    embedText(content),
+    getPageMetadata(content),
+  ]);
+
+  return {
+    id: randomUUID(),
+    url,
+    content,
+    embedding,
+    ...metadata,
   };
 }
