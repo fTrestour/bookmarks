@@ -24,9 +24,7 @@ describe("api", () => {
 
     getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
 
-    embedTextSpy
-      .mockReset()
-      .mockResolvedValue([0.1, 0.2, 0.3]); // deterministic fake embedding
+    embedTextSpy.mockReset().mockResolvedValue([0.1, 0.2, 0.3]); // deterministic fake embedding
   });
 
   it("accepts calls on /", async () => {
