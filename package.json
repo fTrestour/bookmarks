@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "A simple bookmark manager",
   "scripts": {
-    "test": "bun test",
+    "test": "vitest",
     "dev": "node --watch src/app.ts",
     "start": "node src/app.ts",
     "check-types": "tsc --noEmit",
