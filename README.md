@@ -2,7 +2,7 @@
 
 A simple bookmark manager. This application allows you to save bookmarks with automatically extracted metadata and search through them using semantic queries.
 
-![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/fTrestour/bookmarks?utm_source=oss&utm_medium=github&utm_campaign=fTrestour%2Fbookmarks&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+[![CI](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml)
 
 ## Features
 
