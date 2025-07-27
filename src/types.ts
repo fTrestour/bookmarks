@@ -15,7 +15,7 @@ export type BookmarkWithContent = Bookmark & {
   embedding: number[];
 };
 
-export type ActiveToken = {
+export interface ActiveToken {
   jti: string;
   name: string;
-};
+}
