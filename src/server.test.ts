@@ -30,6 +30,7 @@ describe("api", () => {
       dbUri: ":memory:",
       scrapingAiModel: "gpt-4o-mini",
       embeddingModel: "text-embedding-3-small",
+      jwtSecret: "test_secret",
     });
 
     getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
