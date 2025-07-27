@@ -15,7 +15,7 @@ export const server = fastify({ logger: getLoggerConfig() });
 
 async function assertAuthorized(request: FastifyRequest, reply: FastifyReply) {
   const header = request.headers.authorization;
-  if (!header || !header.startsWith("Bearer ")) {
+  if (!header?.startsWith("Bearer ")) {
     reply.code(401).send({ error: "Unauthorized" });
     return false;
   }
