@@ -6,14 +6,16 @@ export async function assertAuthorized(
   reply: FastifyReply,
 ) {
   const header = request.headers.authorization;
+
   if (!header?.startsWith("Bearer ")) {
     reply.code(401).send({ error: "Unauthorized" });
-    return false;
+    return;
   }
+
   const ok = await validateToken(header.slice(7));
+
   if (!ok) {
     reply.code(401).send({ error: "Unauthorized" });
-    return false;
+    return;
   }
-  return true;
 }
