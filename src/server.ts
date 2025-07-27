@@ -18,9 +18,9 @@ if (env === "production") {
     transport: {
       target: "pino-pretty",
       options: {
-        colorize: true
-      }
-    }
+        colorize: true,
+      },
+    },
   }; // Pretty logging for development
 }
 
