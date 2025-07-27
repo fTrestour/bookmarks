@@ -5,7 +5,7 @@ import { z } from "zod";
 import { getBookmarkDataFromUrl } from "./domains/bookmarks.ts";
 import { embedText } from "./embeddings.ts";
 
-export const server = fastify({ logger: true });
+export const server = fastify();
 
 server.get("/", () => {
   return "👋";

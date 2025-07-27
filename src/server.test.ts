@@ -5,12 +5,19 @@ import * as database from "./database";
 import * as config from "./config";
 import * as scrapper from "./scrapper";
 import * as embeddings from "./embeddings";
-import { randomUUID } from "crypto";
+import { randomInt, randomUUID } from "crypto";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
   const getPageContentSpy = vi.spyOn(scrapper, "getPageContent");
   const embedTextSpy = vi.spyOn(embeddings, "embedText");
+
+  const defaultEmbedding = [0.1, 0.2, 0.3];
+  const randomEmbedding = () => [
+    randomInt(0, 100) / 100,
+    randomInt(0, 100) / 100,
+    randomInt(0, 100) / 100,
+  ];
 
   beforeEach(() => {
     getConfigSpy.mockReset().mockReturnValue({
@@ -24,7 +31,7 @@ describe("api", () => {
 
     getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
 
-    embedTextSpy.mockReset().mockResolvedValue([0.1, 0.2, 0.3]); // deterministic fake embedding
+    embedTextSpy.mockReset().mockResolvedValue(defaultEmbedding);
   });
 
   it("accepts calls on /", async () => {
@@ -40,16 +47,16 @@ describe("api", () => {
   it("returns bookmarks on /bookmarks", async () => {
     const testBookmarks = [
       {
-        id: "1",
-        url: "https://example.com",
+        id: randomUUID(),
+        url: "https://example.com/" + randomUUID(),
         content: "Example content",
-        embedding: [0.1, 0.2, 0.3],
+        embedding: randomEmbedding(),
       },
       {
-        id: "2",
-        url: "https://google.com",
+        id: randomUUID(),
+        url: "https://google.com/" + randomUUID(),
         content: "Google content",
-        embedding: [0.4, 0.5, 0.6],
+        embedding: randomEmbedding(),
       },
     ];
 
@@ -65,31 +72,37 @@ describe("api", () => {
   });
 
   it("searches bookmarks on /bookmarks with search query", async () => {
-    const testBookmarks = [
-      {
-        id: "1",
-        url: "https://example.com",
-        content: "Example content",
-        embedding: [0.1, 0.2, 0.3],
-      },
-      {
-        id: "2",
-        url: "https://google.com",
-        content: "Google content",
-        embedding: [0.4, 0.5, 0.6],
-      },
-    ];
+    const example1 = {
+      id: randomUUID(),
+      url: "https://example.com/" + randomUUID(),
+      content: "Example content",
+      embedding: defaultEmbedding,
+    };
+    const google = {
+      id: randomUUID(),
+      url: "https://google.com/" + randomUUID(),
+      content: "Google content",
+      embedding: randomEmbedding(),
+    };
+    const example2 = {
+      id: randomUUID(),
+      url: "https://example.com/" + randomUUID(),
+      content: "Example content 2",
+      embedding: randomEmbedding(),
+    };
+
+    const testBookmarks = [example1, google, example2];
 
     await database.insertBookmarks(testBookmarks);
 
     const searchResp = await server.inject({
       method: "GET",
       url: "/bookmarks",
-      query: { search: "Example content" },
+      query: { search: "Default embedding" },
     });
 
     expect(searchResp.statusCode).toBe(200);
-    expect(embedTextSpy).toHaveBeenCalledWith("Example content");
+    expect((JSON.parse(searchResp.body) as unknown[])[0]).toEqual(example1);
   });
 
   it("creates a bookmark on POST /bookmarks", async () => {
