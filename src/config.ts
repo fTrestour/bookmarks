@@ -1,6 +1,17 @@
 import { config } from "dotenv";
+import { z } from "zod";
 
 config();
+
+const configSchema = z.object({
+  port: z.number().int().positive(),
+  host: z.string().min(1),
+  env: z.string().min(1),
+  dbUri: z.string().min(1),
+  scrapingAiModel: z.string().min(1),
+  embeddingModel: z.string().min(1),
+  jwtSecret: z.string().min(1),
+});
 
 export function getConfig(): {
   port: number;
@@ -22,7 +33,7 @@ export function getConfig(): {
     process.env.AI_EMBEDDING_MODEL ?? "text-embedding-3-small";
   const jwtSecret = process.env.JWT_SECRET ?? "dev_secret";
 
-  return {
+  const configData = {
     port,
     host,
     env,
@@ -31,4 +42,6 @@ export function getConfig(): {
     embeddingModel,
     jwtSecret,
   };
+
+  return configSchema.parse(configData);
 }
