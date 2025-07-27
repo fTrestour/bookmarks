@@ -39,67 +39,71 @@ server.get("/bookmarks", async (request) => {
   return bookmarks;
 });
 
-server.post("/bookmarks", async (request, reply) => {
-  if (!(await assertAuthorized(request, reply))) return;
-  const bodySchema = z.object({
-    url: z.string().url(),
-  });
-  const body = bodySchema.parse(request.body);
+server.post("/bookmarks", {
+  preHandler: assertAuthorized,
+  handler: async (request, reply) => {
+    const bodySchema = z.object({
+      url: z.string().url(),
+    });
+    const body = bodySchema.parse(request.body);
 
-  const bookmark = await getBookmarkDataFromUrl(body.url);
+    const bookmark = await getBookmarkDataFromUrl(body.url);
 
-  await insertBookmarks([bookmark]);
-  return { success: true };
+    await insertBookmarks([bookmark]);
+    return { success: true };
+  }
 });
 
-server.post("/bookmarks/batch", async (request, reply) => {
-  if (!(await assertAuthorized(request, reply))) return;
-  const bodySchema = z.object({
-    url: z.string().url(),
-  });
-  const batchBodySchema = z.array(bodySchema);
-  const body = batchBodySchema.parse(request.body);
-
-  const bookmarks: BookmarkWithContent[] = [];
-  const BATCH_SIZE = 20;
-  let totalProcessed = 0;
-  let totalSuccess = 0;
-  let totalFailed = 0;
-
-  for (let i = 0; i < body.length; i += BATCH_SIZE) {
-    const batch = body.slice(i, i + BATCH_SIZE);
-    const batchResults = await Promise.allSettled(
-      batch.map((item) => getBookmarkDataFromUrl(item.url)),
-    );
-
-    batchResults.forEach((result, index) => {
-      const url = batch[index].url;
-      totalProcessed++;
-
-      if (result.status === "fulfilled") {
-        bookmarks.push(result.value);
-        totalSuccess++;
-      } else {
-        request.log.error(
-          `Failed to process bookmark for URL: ${url}`,
-          result.reason,
-        );
-        totalFailed++;
-      }
+server.post("/bookmarks/batch", {
+  preHandler: assertAuthorized,
+  handler: async (request, reply) => {
+    const bodySchema = z.object({
+      url: z.string().url(),
     });
-  }
+    const batchBodySchema = z.array(bodySchema);
+    const body = batchBodySchema.parse(request.body);
 
-  if (bookmarks.length > 0) {
-    await insertBookmarks(bookmarks);
-  }
+    const bookmarks: BookmarkWithContent[] = [];
+    const BATCH_SIZE = 20;
+    let totalProcessed = 0;
+    let totalSuccess = 0;
+    let totalFailed = 0;
 
-  return {
-    success: true,
-    stats: {
-      totalProcessed,
-      totalSuccess,
-      totalFailed,
-      bookmarksInserted: bookmarks.length,
-    },
-  };
+    for (let i = 0; i < body.length; i += BATCH_SIZE) {
+      const batch = body.slice(i, i + BATCH_SIZE);
+      const batchResults = await Promise.allSettled(
+        batch.map((item) => getBookmarkDataFromUrl(item.url)),
+      );
+
+      batchResults.forEach((result, index) => {
+        const url = batch[index].url;
+        totalProcessed++;
+
+        if (result.status === "fulfilled") {
+          bookmarks.push(result.value);
+          totalSuccess++;
+        } else {
+          request.log.error(
+            `Failed to process bookmark for URL: ${url}`,
+            result.reason,
+          );
+          totalFailed++;
+        }
+      });
+    }
+
+    if (bookmarks.length > 0) {
+      await insertBookmarks(bookmarks);
+    }
+
+    return {
+      success: true,
+      stats: {
+        totalProcessed,
+        totalSuccess,
+        totalFailed,
+        bookmarksInserted: bookmarks.length,
+      },
+    };
+  }
 });
