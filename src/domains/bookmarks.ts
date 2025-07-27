@@ -6,6 +6,15 @@ import type { BookmarkWithContent } from "../types.ts";
 export async function getBookmarkDataFromUrl(
   url: string,
 ): Promise<BookmarkWithContent> {
+  try {
+    new URL(url);
+  } catch {
+    throw new Error(`Invalid URL format: ${url}`);
+  }
+
+  const content = await getPageContent(url);
+  // …rest of the implementation
+}
   const content = await getPageContent(url);
 
   const [embedding, metadata] = await Promise.all([
