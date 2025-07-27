@@ -16,7 +16,7 @@ export async function embedText(text: string): Promise<number[]> {
     return embedding;
   } catch (error) {
     throw new Error(
-      `Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `Failed to generate embedding: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }

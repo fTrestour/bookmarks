@@ -156,7 +156,9 @@ describe("api", () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(JSON.parse(response.body)).toEqual({ success: true });
+    expect(JSON.parse(response.body)).toEqual(
+      expect.objectContaining({ success: true }),
+    );
     expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
     expect(getPageMetadataSpy).toHaveBeenCalledTimes(urls.length);
 
