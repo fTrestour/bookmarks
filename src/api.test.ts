@@ -34,6 +34,7 @@ describe("api", () => {
       host: "localhost",
       env: "test",
       dbUri: ":memory:",
+      openaiApiKey: "dummy",
       scrapingAiModel: "gpt-4o-mini",
       embeddingModel: "text-embedding-3-small",
       jwtSecret: "test_secret",
