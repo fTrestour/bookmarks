@@ -14,9 +14,9 @@ async function getDb() {
     return db;
   }
 
-  const { dbUri } = getConfig();
+  const { dbUri, dbAuthToken } = getConfig();
 
-  const newDb = createClient({ url: dbUri });
+  const newDb = createClient({ url: dbUri, authToken: dbAuthToken });
   await newDb.execute(
     "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY NOT NULL, url TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, embedding F32_BLOB(1536) NOT NULL)",
   );
