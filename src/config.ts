@@ -43,7 +43,19 @@ export function getConfig(): z.infer<typeof configSchema> {
   let parsedConfig = configSchema.partial().parse(configData);
 
   if (parsedConfig.env !== "production") {
-    parsedConfig = { ...parsedConfig, ...defaultConfig };
+    parsedConfig = {
+      port: parsedConfig.port ?? defaultConfig.port,
+      host: parsedConfig.host ?? defaultConfig.host,
+      env: parsedConfig.env ?? defaultConfig.env,
+      dbUri: parsedConfig.dbUri ?? defaultConfig.dbUri,
+      dbAuthToken: parsedConfig.dbAuthToken ?? defaultConfig.dbAuthToken,
+      openaiApiKey: parsedConfig.openaiApiKey ?? defaultConfig.openaiApiKey,
+      scrapingAiModel:
+        parsedConfig.scrapingAiModel ?? defaultConfig.scrapingAiModel,
+      embeddingModel:
+        parsedConfig.embeddingModel ?? defaultConfig.embeddingModel,
+      jwtSecret: parsedConfig.jwtSecret ?? defaultConfig.jwtSecret,
+    };
   }
 
   return configSchema.parse(parsedConfig);
