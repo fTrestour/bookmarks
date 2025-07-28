@@ -34,7 +34,6 @@ RUN adduser --system --uid 1001 nodejs
 # Copy the built application
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/sqlite ./sqlite
 
 # Install only production dependencies
 COPY package.json package-lock.json* ./
