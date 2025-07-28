@@ -1,15 +1,14 @@
 import { getConfig } from "./config.ts";
-import { server } from "./server.ts";
+import { api } from "./api.ts";
 
 const start = async () => {
   try {
     const { port, host, env } = getConfig();
-    await server.listen({ port, host });
-    server.log.info(
-      `Server is running on http://${host}:${port} in ${env} mode`,
-    );
+
+    await api.listen({ port, host });
+    api.log.info(`Server is running on http://${host}:${port} in ${env} mode`);
   } catch (err) {
-    server.log.error(err);
+    api.log.error(err);
     process.exit(1);
   }
 };

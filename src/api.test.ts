@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { server } from "./server.ts";
+import { api } from "./api.ts";
 import { vi } from "vitest";
-import * as database from "./database";
-import * as config from "./config";
+import * as database from "./database.ts";
+import * as config from "./config.ts";
 import * as scrapper from "./ai/scrapper.ts";
 import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
@@ -52,7 +52,7 @@ describe("api", () => {
   });
 
   it("accepts calls on /", async () => {
-    const response = await server.inject({
+    const response = await api.inject({
       method: "GET",
       url: "/",
     });
@@ -82,7 +82,7 @@ describe("api", () => {
 
       await database.insertBookmarks(testBookmarks);
 
-      const response = await server.inject({
+      const response = await api.inject({
         method: "GET",
         url: "/bookmarks",
       });
@@ -124,7 +124,7 @@ describe("api", () => {
 
       await database.insertBookmarks(testBookmarks);
 
-      const searchResp = await server.inject({
+      const searchResp = await api.inject({
         method: "GET",
         url: "/bookmarks",
         query: { search: "Default embedding" },
@@ -141,7 +141,7 @@ describe("api", () => {
 
   describe("POST /bookmarks", () => {
     it("rejects unauthorized requests", async () => {
-      const resp = await server.inject({
+      const resp = await api.inject({
         method: "POST",
         url: "/bookmarks",
         payload: { url: "https://example.com/" + randomUUID() },
@@ -151,7 +151,7 @@ describe("api", () => {
 
     it("creates a bookmark", async () => {
       const url = "https://example.org/" + randomUUID();
-      const response = await server.inject({
+      const response = await api.inject({
         method: "POST",
         url: "/bookmarks",
         headers: headers(),
@@ -174,7 +174,7 @@ describe("api", () => {
 
   describe("POST /bookmarks/batch", () => {
     it("rejects unauthorized requests", async () => {
-      const resp = await server.inject({
+      const resp = await api.inject({
         method: "POST",
         url: "/bookmarks/batch",
         payload: [{ url: "https://example.com/" + randomUUID() }],
@@ -187,7 +187,7 @@ describe("api", () => {
         "https://batch-example1.org/" + randomUUID(),
         "https://batch-example2.org/" + randomUUID(),
       ];
-      const response = await server.inject({
+      const response = await api.inject({
         method: "POST",
         url: "/bookmarks/batch",
         headers: headers(),
@@ -208,7 +208,7 @@ describe("api", () => {
 
   describe("DELETE /tokens/:jti", () => {
     it("rejects unauthorized requests", async () => {
-      const resp = await server.inject({
+      const resp = await api.inject({
         method: "DELETE",
         url: "/tokens/some-jti",
       });
@@ -218,7 +218,7 @@ describe("api", () => {
     it("deletes a token", async () => {
       const { jti } = JSON.parse(
         (
-          await server.inject({
+          await api.inject({
             method: "POST",
             url: "/tokens",
             headers: headers(),
@@ -227,7 +227,7 @@ describe("api", () => {
         ).body,
       );
 
-      const del = await server.inject({
+      const del = await api.inject({
         method: "DELETE",
         url: `/tokens/${jti}`,
         headers: headers(),
@@ -240,7 +240,7 @@ describe("api", () => {
 
   describe("POST /tokens", () => {
     it("rejects unauthorized requests", async () => {
-      const resp = await server.inject({
+      const resp = await api.inject({
         method: "POST",
         url: "/tokens",
         payload: { name: "test-token" },
@@ -250,7 +250,7 @@ describe("api", () => {
     });
 
     it("creates a token", async () => {
-      const resp = await server.inject({
+      const resp = await api.inject({
         method: "POST",
         url: "/tokens",
         headers: headers(),

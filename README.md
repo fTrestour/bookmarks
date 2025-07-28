@@ -68,7 +68,3 @@ Bookmarks are returned with the following structure:
   "title": "Extracted Title"
 }
 ```
-
-## TODO
-
-- [ ] Add authentication

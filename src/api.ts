@@ -6,13 +6,13 @@ import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import { createToken, validateToken } from "./authentication.ts";
 
-export const server = fastify({ logger: getLoggerConfig() });
+export const api = fastify({ logger: getLoggerConfig() });
 
-server.get("/", () => {
+api.get("/", () => {
   return "👋";
 });
 
-server.post("/tokens", {
+api.post("/tokens", {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   preHandler: assertAuthorized,
   handler: async (request) => {
@@ -22,7 +22,7 @@ server.post("/tokens", {
   },
 });
 
-server.delete("/tokens/:jti", {
+api.delete("/tokens/:jti", {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   preHandler: assertAuthorized,
   handler: async (request) => {
@@ -32,7 +32,7 @@ server.delete("/tokens/:jti", {
   },
 });
 
-server.get("/bookmarks", async (request) => {
+api.get("/bookmarks", async (request) => {
   const querySchema = z.object({ search: z.string().optional() });
   const { search } = querySchema.parse(request.query);
 
@@ -41,7 +41,7 @@ server.get("/bookmarks", async (request) => {
   return bookmarks;
 });
 
-server.post("/bookmarks", {
+api.post("/bookmarks", {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   preHandler: assertAuthorized,
   handler: async (request) => {
@@ -55,7 +55,7 @@ server.post("/bookmarks", {
   },
 });
 
-server.post("/bookmarks/batch", {
+api.post("/bookmarks/batch", {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   preHandler: assertAuthorized,
   handler: async (request) => {
