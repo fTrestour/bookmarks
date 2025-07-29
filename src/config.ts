@@ -10,6 +10,7 @@ const configSchema = z.object({
   scrapingAiModel: z.string().min(1),
   embeddingModel: z.string().min(1),
   jwtSecret: z.string().min(1),
+  corsAllowOrigin: z.string().optional(),
 });
 
 const defaultConfig = {
@@ -22,6 +23,7 @@ const defaultConfig = {
   scrapingAiModel: "gpt-4.1-mini",
   embeddingModel: "text-embedding-3-small",
   jwtSecret: "dev_secret",
+  corsAllowOrigin: "*",
 } as const;
 
 export function getConfig(): z.infer<typeof configSchema> {
@@ -35,6 +37,7 @@ export function getConfig(): z.infer<typeof configSchema> {
     scrapingAiModel: process.env.SCRAPING_AI_MODEL,
     embeddingModel: process.env.AI_EMBEDDING_MODEL,
     jwtSecret: process.env.JWT_SECRET,
+    corsAllowOrigin: process.env.CORS_ALLOW_ORIGIN,
   };
 
   let parsedConfig = configSchema.partial().parse(configData);
@@ -52,6 +55,8 @@ export function getConfig(): z.infer<typeof configSchema> {
       embeddingModel:
         parsedConfig.embeddingModel ?? defaultConfig.embeddingModel,
       jwtSecret: parsedConfig.jwtSecret ?? defaultConfig.jwtSecret,
+      corsAllowOrigin:
+        parsedConfig.corsAllowOrigin ?? defaultConfig.corsAllowOrigin,
     };
   }
 

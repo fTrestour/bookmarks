@@ -4,9 +4,19 @@ import { z } from "zod";
 import { saveBookmarks } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
+import cors from "@fastify/cors";
 import { createToken, validateToken } from "./domains/authentication.ts";
+import { getConfig } from "./config.ts";
+
+const config = getConfig();
 
 export const api = fastify({ logger: getLoggerConfig() });
+
+if (config.corsAllowOrigin) {
+  api.register(cors, {
+    origin: config.corsAllowOrigin,
+  });
+}
 
 api.get("/", () => {
   return "👋";
