@@ -9,7 +9,7 @@ import type { Bookmark, BookmarkWithContent, ActiveToken } from "./types.ts";
 import { bookmarksSchema } from "./types.ts";
 
 let db: Client | null = null;
-async function getDb() {
+export async function getDb() {
   if (db) {
     return db;
   }
