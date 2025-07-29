@@ -1,7 +1,4 @@
-import { config } from "dotenv";
 import { z } from "zod";
-
-config();
 
 const configSchema = z.object({
   port: z.number({ coerce: true }).int().positive(),
