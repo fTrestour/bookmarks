@@ -1,5 +1,4 @@
-# Use Node.js 20 Alpine as base image for smaller size
-FROM node:24-alpine AS base
+FROM node:24 AS base
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -10,7 +9,7 @@ RUN adduser --system --uid 1001 nodejs
 
 # Install only production dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production --ignore-scripts && npx playwright install chromium
+RUN npm ci --only=production --ignore-scripts && npx playwright install --with-deps chromium
 
 COPY . .
 
