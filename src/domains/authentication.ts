@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
-import { getConfig } from "./config.ts";
-import { insertActiveToken, isActiveToken } from "./database.ts";
-import type { ActiveToken } from "./types.ts";
-import { activeTokenSchema } from "./types.ts";
+import { getConfig } from "../config.ts";
+import { insertActiveToken, isActiveToken } from "../database.ts";
+import type { ActiveToken } from "../types.ts";
+import { activeTokenSchema } from "../types.ts";
 
 export async function createToken(name: string): Promise<{
   payload: ActiveToken;

@@ -39,10 +39,9 @@ export async function saveBookmarks(urls: string[]) {
   }
 
   return {
-    totalProcessed,
-    totalSuccess,
-    totalFailed,
-    bookmarksInserted: bookmarks.length,
+    processedCount: totalProcessed,
+    successCount: totalSuccess,
+    failedCount: totalFailed,
   };
 }
 

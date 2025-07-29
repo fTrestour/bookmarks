@@ -4,7 +4,7 @@ import { z } from "zod";
 import { saveBookmarks } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
-import { createToken, validateToken } from "./authentication.ts";
+import { createToken, validateToken } from "./domains/authentication.ts";
 
 export const api = fastify({ logger: getLoggerConfig() });
 
@@ -50,8 +50,9 @@ api.post("/bookmarks", {
     });
     const body = bodySchema.parse(request.body);
 
-    await saveBookmarks([body.url]);
-    return { success: true };
+    const stats = await saveBookmarks([body.url]);
+
+    return { success: stats.failedCount === 0, stats };
   },
 });
 
@@ -68,7 +69,7 @@ api.post("/bookmarks/batch", {
     const stats = await saveBookmarks(body.map((item) => item.url));
 
     return {
-      success: stats.totalFailed === 0,
+      success: stats.failedCount === 0,
       stats,
     };
   },

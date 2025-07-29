@@ -6,7 +6,7 @@ import * as config from "./config.ts";
 import * as scrapper from "./ai/scrapper.ts";
 import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
-import { createToken } from "./authentication.ts";
+import { createToken } from "./domains/authentication.ts";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
@@ -162,7 +162,10 @@ describe("api", () => {
       });
 
       expect(response.statusCode).toBe(200);
-      expect(JSON.parse(response.body)).toEqual({ success: true });
+      expect(JSON.parse(response.body)).toEqual({
+        success: true,
+        stats: { processedCount: 1, successCount: 1, failedCount: 0 },
+      });
       expect(embedTextSpy).toHaveBeenCalled();
       expect(getPageMetadataSpy).toHaveBeenCalled();
 
