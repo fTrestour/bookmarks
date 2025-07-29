@@ -5,7 +5,10 @@ import { z } from "zod";
 import { getConfig } from "../config.ts";
 
 export async function getPageContent(url: string): Promise<string> {
-  const browser = await chromium.launch();
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--init", "--ipc=host"],
+  });
   try {
     const page = await browser.newPage();
     await page.goto(url, { timeout: 30000 });
