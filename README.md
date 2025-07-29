@@ -68,3 +68,13 @@ Bookmarks are returned with the following structure:
   "title": "Extracted Title"
 }
 ```
+
+## TODO
+
+- [ ] CORS
+- [ ] Rate limiting
+- [ ] Logging
+- [ ] LLM tracing
+- [ ] Reembed
+  - ef3c3c7f-85a5-4608-9a29-d052a68416c1
+  - f024b9d7-cb38-47ba-b794-553f5871b9d8
