@@ -10,7 +10,7 @@ RUN adduser --system --uid 1001 nodejs
 
 # Install only production dependencies
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production --ignore-scripts
+RUN npm ci --only=production --ignore-scripts && npx playwright install
 
 COPY . .
 
