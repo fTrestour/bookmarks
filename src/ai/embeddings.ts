@@ -1,10 +1,12 @@
-import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { embed } from "ai";
+import { err, ok } from "neverthrow";
 import { getConfig } from "../config.ts";
+import { createEmbeddingError, createEmptyTextError } from "../errors.ts";
 
-export async function embedText(text: string): Promise<number[]> {
+export async function embedText(text: string) {
   if (!text.trim()) {
-    throw new Error("Text cannot be empty");
+    return err(createEmptyTextError());
   }
 
   try {
@@ -13,10 +15,8 @@ export async function embedText(text: string): Promise<number[]> {
       model: openai.embedding(embeddingModel),
       value: text,
     });
-    return embedding;
+    return ok(embedding);
   } catch (error) {
-    throw new Error(
-      `Failed to generate embedding: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    return err(createEmbeddingError(error));
   }
 }
