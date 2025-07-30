@@ -175,7 +175,6 @@ The application is built with:
 
 ## TODO
 
-- [ ] Logging
 - [ ] LLM tracing
 - [ ] Reembed
   - ef3c3c7f-85a5-4608-9a29-d052a68416c1
