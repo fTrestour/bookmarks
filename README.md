@@ -9,6 +9,7 @@ A simple bookmark manager. This application allows you to save bookmarks with au
 - **Smart Bookmark Extraction**: Automatically extracts title and content from web pages
 - **AI-Powered Search**: Search bookmarks using natural language queries with semantic similarity
 - **Secure API**: Token-based authentication for bookmark management
+- **Rate Limiting**: Built-in protection against API abuse with configurable limits per endpoint
 
 ### Quick Start
 
@@ -38,6 +39,32 @@ The application requires several environment variables to be configured:
 - `AI_EMBEDDING_MODEL`: AI model for generating embeddings (e.g., `text-embedding-3-small`)
 - `NODE_ENV`: Environment mode (`development` or `production`)
 
+### Rate Limiting
+
+The API includes built-in rate limiting to prevent abuse and ensure fair usage:
+
+**Global Rate Limits:**
+
+- **All endpoints**: 200 requests per minute
+
+**Endpoint-Specific Rate Limits:**
+
+- **POST /bookmarks**: 1 request per minute (bookmark creation)
+- **POST /tokens**: 1 request per hour (token creation)
+
+**Rate Limit Behavior:**
+
+- When rate limits are exceeded, the API returns HTTP 429 (Too Many Requests)
+- Rate limiting is automatically disabled in test environment (`NODE_ENV=test`)
+- Rate limits reset after the specified time window
+
+**Rate Limit Headers:**
+The API includes standard rate limiting headers in responses:
+
+- `X-RateLimit-Limit`: Maximum number of requests allowed
+- `X-RateLimit-Remaining`: Number of requests remaining in the current window
+- `X-RateLimit-Reset`: Time when the rate limit window resets
+
 ### API Usage
 
 #### Authentication
@@ -52,6 +79,8 @@ curl -X POST http://localhost:3000/tokens \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \
   -d '{"name": "my-token"}'
 ```
+
+_Note: Token creation is rate-limited to 1 request per hour._
 
 **Delete a Token:**
 
@@ -68,6 +97,8 @@ curl -X POST http://localhost:3000/bookmarks \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d '{"url": "https://example.com/article"}'
 ```
+
+_Note: Bookmark creation is rate-limited to 1 request per minute._
 
 #### Search Bookmarks
 
@@ -144,7 +175,6 @@ The application is built with:
 
 ## TODO
 
-- [ ] Rate limiting
 - [ ] Logging
 - [ ] LLM tracing
 - [ ] Reembed
