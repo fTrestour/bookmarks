@@ -4,36 +4,54 @@ import {
   type InValue,
   type ResultSet,
 } from "@libsql/client";
+import { err, ok } from "neverthrow";
 import { getConfig } from "./config.ts";
-import type { Bookmark, BookmarkWithContent, ActiveToken } from "./types.ts";
+import {
+  createDatabaseConnectionError,
+  createDatabaseError,
+  createDuplicateTokenError,
+} from "./errors.ts";
+import type { ActiveToken, BookmarkWithContent } from "./types.ts";
 import { bookmarksSchema } from "./types.ts";
 
 let db: Client | null = null;
 export async function getDb() {
   if (db) {
-    return db;
+    return ok(db);
   }
 
-  const { dbUri, dbAuthToken } = getConfig();
+  try {
+    const { dbUri, dbAuthToken } = getConfig();
 
-  const newDb = createClient({ url: dbUri, authToken: dbAuthToken });
-  await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY NOT NULL, url TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, embedding F32_BLOB(1536) NOT NULL)",
-  );
-  await newDb.execute(
-    "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL)",
-  );
+    const newDb = createClient({ url: dbUri, authToken: dbAuthToken });
+    await newDb.execute(
+      "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY NOT NULL, url TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, embedding F32_BLOB(1536) NOT NULL)",
+    );
+    await newDb.execute(
+      "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL)",
+    );
 
-  db = newDb;
+    db = newDb;
 
-  return db;
+    return ok(db);
+  } catch (error) {
+    return err(
+      createDatabaseConnectionError(
+        "Failed to initialize database connection",
+        error,
+      ),
+    );
+  }
 }
 
-export async function insertBookmarks(
-  bookmarks: BookmarkWithContent[],
-): Promise<void> {
+export async function insertBookmarks(bookmarks: BookmarkWithContent[]) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
   try {
-    const db = await getDb();
+    const db = dbResult.value;
 
     await db.batch(
       bookmarks.map((bookmark) => ({
@@ -48,66 +66,128 @@ export async function insertBookmarks(
       })),
       "write",
     );
+
+    return ok(undefined);
   } catch (error) {
-    throw new Error(
-      `Failed to insert bookmarks: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
+    return err(
+      createDatabaseError(
+        `Failed to insert bookmarks: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
     );
   }
 }
 
 export async function insertActiveToken({ jti, name }: ActiveToken) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
   try {
-    const db = await getDb();
+    const db = dbResult.value;
     await db.execute("INSERT INTO active_tokens (jti, name) VALUES (?, ?)", [
       jti,
       name,
     ]);
+    return ok(undefined);
   } catch (error) {
     if (
       error instanceof Error &&
       error.message.includes("UNIQUE constraint failed")
     ) {
-      throw new Error(`Token with JTI '${jti}' already exists`);
+      return err(createDuplicateTokenError(jti));
     }
 
-    throw new Error(
-      `Failed to insert active token: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
+    return err(
+      createDatabaseError(
+        `Failed to insert active token: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
     );
   }
 }
 
-export async function isActiveToken(jti: string): Promise<boolean> {
-  const db = await getDb();
-  const res = await db.execute("SELECT 1 FROM active_tokens WHERE jti = ?", [
-    jti,
-  ]);
-  return res.rows.length > 0;
-}
-
-export async function deleteActiveToken(jti: string): Promise<void> {
-  const db = await getDb();
-  await db.execute("DELETE FROM active_tokens WHERE jti = ?", [jti]);
-}
-
-export async function getAllBookmarks(
-  searchEmbedding: number[] | null,
-): Promise<Bookmark[]> {
-  const db = await getDb();
-
-  let sql = "SELECT * FROM bookmarks";
-  let args: InValue[] = [];
-  if (searchEmbedding) {
-    sql =
-      "SELECT id, url, title, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
-    args = [JSON.stringify(searchEmbedding)];
+export async function isActiveToken(jti: string) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
   }
 
-  const result = await db.execute({ sql, args });
-  return bookmarksSchema.parse(toObject(result));
+  try {
+    const db = dbResult.value;
+    const res = await db.execute("SELECT 1 FROM active_tokens WHERE jti = ?", [
+      jti,
+    ]);
+    return ok(res.rows.length > 0);
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to check active token: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
+export async function deleteActiveToken(jti: string) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
+  try {
+    const db = dbResult.value;
+    await db.execute("DELETE FROM active_tokens WHERE jti = ?", [jti]);
+    return ok(undefined);
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to delete active token: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
+export async function getAllBookmarks(searchEmbedding: number[] | null) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
+  try {
+    const db = dbResult.value;
+
+    let sql = "SELECT * FROM bookmarks";
+    let args: InValue[] = [];
+    if (searchEmbedding) {
+      sql =
+        "SELECT id, url, title, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
+      args = [JSON.stringify(searchEmbedding)];
+    }
+
+    const result = await db.execute({ sql, args });
+    const bookmarks = bookmarksSchema.parse(toObject(result));
+    return ok(bookmarks);
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to retrieve bookmarks: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
 }
 
 function toObject({ columns, rows }: ResultSet) {

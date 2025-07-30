@@ -7,6 +7,7 @@ import * as scrapper from "./ai/scrapper.ts";
 import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
 import { createToken } from "./domains/authentication.ts";
+import { ok } from "neverthrow";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
@@ -40,16 +41,20 @@ describe("api", () => {
       jwtSecret: "test_secret",
     });
 
-    getPageContentSpy.mockReset().mockResolvedValue("Mock page content");
+    getPageContentSpy.mockReset().mockResolvedValue(ok("Mock page content"));
 
-    getPageMetadataSpy.mockReset().mockResolvedValue({
-      title: "Mock Title",
-    });
+    getPageMetadataSpy.mockReset().mockResolvedValue(
+      ok({
+        title: "Mock Title",
+      }),
+    );
 
-    embedTextSpy.mockReset().mockResolvedValue(defaultEmbedding);
+    embedTextSpy.mockReset().mockResolvedValue(ok(defaultEmbedding));
 
-    const { token } = await createToken("test-token");
-    testToken = token;
+    const tokenResult = await createToken("test-token");
+    if (tokenResult.isOk()) {
+      testToken = tokenResult.value.token;
+    }
   });
 
   it("accepts calls on /", async () => {
@@ -81,7 +86,8 @@ describe("api", () => {
         },
       ];
 
-      await database.insertBookmarks(testBookmarks);
+      const insertResult = await database.insertBookmarks(testBookmarks);
+      expect(insertResult.isOk()).toBe(true);
 
       const response = await api.inject({
         method: "GET",
@@ -123,7 +129,8 @@ describe("api", () => {
 
       const testBookmarks = [example1, google, example2];
 
-      await database.insertBookmarks(testBookmarks);
+      const insertResult = await database.insertBookmarks(testBookmarks);
+      expect(insertResult.isOk()).toBe(true);
 
       const searchResp = await api.inject({
         method: "GET",
@@ -169,10 +176,13 @@ describe("api", () => {
       expect(embedTextSpy).toHaveBeenCalled();
       expect(getPageMetadataSpy).toHaveBeenCalled();
 
-      const bookmarks = await database.getAllBookmarks(null);
-      expect(bookmarks.map((b) => b.url)).toEqual(
-        expect.arrayContaining([url]),
-      );
+      const bookmarksResult = await database.getAllBookmarks(null);
+      expect(bookmarksResult.isOk()).toBe(true);
+      if (bookmarksResult.isOk()) {
+        expect(bookmarksResult.value.map((b) => b.url)).toEqual(
+          expect.arrayContaining([url]),
+        );
+      }
     });
   });
 
@@ -204,7 +214,11 @@ describe("api", () => {
       });
 
       expect(del.statusCode).toBe(200);
-      expect(await database.isActiveToken(jti)).toBe(false);
+      const isActiveResult = await database.isActiveToken(jti);
+      expect(isActiveResult.isOk()).toBe(true);
+      if (isActiveResult.isOk()) {
+        expect(isActiveResult.value).toBe(false);
+      }
     });
   });
 

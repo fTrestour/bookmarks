@@ -1,15 +1,21 @@
-import { chromium } from "playwright";
 import { openai } from "@ai-sdk/openai";
-import { generateText, generateObject } from "ai";
+import { generateObject, generateText } from "ai";
+import { err, ok } from "neverthrow";
+import { chromium } from "playwright";
 import { z } from "zod";
 import { getConfig } from "../config.ts";
+import {
+  createContentExtractionError,
+  createScrapingError,
+} from "../errors.ts";
 
-export async function getPageContent(url: string): Promise<string> {
-  const browser = await chromium.launch({
-    headless: true,
-    args: ["--init", "--ipc=host"],
-  });
+export async function getPageContent(url: string) {
+  let browser;
   try {
+    browser = await chromium.launch({
+      headless: true,
+    });
+
     const page = await browser.newPage();
     await page.goto(url, { timeout: 30000 });
     const content = await page.content();
@@ -24,15 +30,17 @@ HTML content:
 ${content}`,
     });
 
-    return text;
+    return ok(text);
+  } catch (error) {
+    return err(createScrapingError(url, error));
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   }
 }
 
-export async function getPageMetadata(
-  content: string,
-): Promise<{ title: string }> {
+export async function getPageMetadata(content: string, url: string) {
   const { scrapingAiModel } = getConfig();
 
   try {
@@ -43,12 +51,8 @@ export async function getPageMetadata(
       }),
       prompt: content,
     });
-    return object;
+    return ok(object);
   } catch (error) {
-    throw new Error(
-      `Failed to get page metadata: ${
-        error instanceof Error ? error.message : "Unknown error"
-      }`,
-    );
+    return err(createContentExtractionError(url, error));
   }
 }

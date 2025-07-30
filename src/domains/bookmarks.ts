@@ -1,53 +1,64 @@
 import { randomUUID } from "crypto";
-import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
+import { err, ok } from "neverthrow";
 import { embedText } from "../ai/embeddings.ts";
+import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
 import { insertBookmarks } from "../database.ts";
-import type { BookmarkWithContent } from "../types.ts";
+import { createInvalidUrlError } from "../errors.ts";
 
 export async function saveBookmark(url: string) {
-  let totalProcessed = 0;
-  let totalSuccess = 0;
-  let totalFailed = 0;
-
-  try {
-    const bookmark = await getBookmarkDataFromUrl(url);
-    await insertBookmarks([bookmark]);
-    totalProcessed++;
-    totalSuccess++;
-  } catch (error) {
-    console.error(`Failed to process bookmark for URL: ${url}`, error);
-    totalProcessed++;
-    totalFailed++;
+  const bookmarkResult = await getBookmarkDataFromUrl(url);
+  if (bookmarkResult.isErr()) {
+    return ok({
+      processedCount: 1,
+      successCount: 0,
+      failedCount: 1,
+    });
   }
 
-  return {
-    processedCount: totalProcessed,
-    successCount: totalSuccess,
-    failedCount: totalFailed,
-  };
+  const insertResult = await insertBookmarks([bookmarkResult.value]);
+  if (insertResult.isErr()) {
+    return err(insertResult.error);
+  }
+
+  return ok({
+    processedCount: 1,
+    successCount: 1,
+    failedCount: 0,
+  });
 }
 
-async function getBookmarkDataFromUrl(
-  url: string,
-): Promise<BookmarkWithContent> {
+async function getBookmarkDataFromUrl(url: string) {
   try {
     new URL(url);
   } catch {
-    throw new Error(`Invalid URL format: ${url}`);
+    return err(createInvalidUrlError(url));
   }
 
-  const content = await getPageContent(url);
+  const contentResult = await getPageContent(url);
+  if (contentResult.isErr()) {
+    return err(contentResult.error);
+  }
 
-  const [embedding, metadata] = await Promise.all([
+  const content = contentResult.value;
+
+  const [embeddingResult, metadataResult] = await Promise.all([
     embedText(content),
-    getPageMetadata(content),
+    getPageMetadata(content, url),
   ]);
 
-  return {
+  if (embeddingResult.isErr()) {
+    return err(embeddingResult.error);
+  }
+
+  if (metadataResult.isErr()) {
+    return err(metadataResult.error);
+  }
+
+  return ok({
     id: randomUUID(),
     url,
     content,
-    embedding,
-    ...metadata,
-  };
+    embedding: embeddingResult.value,
+    ...metadataResult.value,
+  });
 }

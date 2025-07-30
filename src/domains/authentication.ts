@@ -1,35 +1,40 @@
-import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
+import jwt from "jsonwebtoken";
+import { err, ok } from "neverthrow";
 import { getConfig } from "../config.ts";
 import { insertActiveToken, isActiveToken } from "../database.ts";
-import type { ActiveToken } from "../types.ts";
+import { createInvalidTokenError } from "../errors.ts";
 import { activeTokenSchema } from "../types.ts";
 
-export async function createToken(name: string): Promise<{
-  payload: ActiveToken;
-  token: string;
-}> {
+export async function createToken(name: string) {
   const { jwtSecret } = getConfig();
   const jti = randomUUID();
-  const payload: ActiveToken = { jti, name };
+  const payload = { jti, name };
   const token = jwt.sign(payload, jwtSecret, {
     algorithm: "HS256",
   });
-  await insertActiveToken(payload);
-  return { payload, token };
+
+  const insertResult = await insertActiveToken(payload);
+  return insertResult.map(() => ({ payload, token }));
 }
 
-export function readToken(token: string): ActiveToken {
-  const { jwtSecret } = getConfig();
-  const decoded = jwt.verify(token, jwtSecret);
-  return activeTokenSchema.parse(decoded);
-}
-
-export async function validateToken(token: string): Promise<boolean> {
+export function readToken(token: string) {
   try {
-    const { jti } = readToken(token);
-    return await isActiveToken(jti);
-  } catch {
-    return false;
+    const { jwtSecret } = getConfig();
+    const decoded = jwt.verify(token, jwtSecret);
+    const parsedToken = activeTokenSchema.parse(decoded);
+    return ok(parsedToken);
+  } catch (error) {
+    return err(createInvalidTokenError(error));
   }
+}
+
+export async function validateToken(token: string) {
+  const tokenResult = readToken(token);
+  if (tokenResult.isErr()) {
+    return err(tokenResult.error);
+  }
+
+  const { jti } = tokenResult.value;
+  return await isActiveToken(jti);
 }
