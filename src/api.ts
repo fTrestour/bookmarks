@@ -5,6 +5,7 @@ import { saveBookmark } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import { createToken, validateToken } from "./domains/authentication.ts";
 import { getConfig } from "./config.ts";
 
@@ -18,11 +19,27 @@ if (config.corsAllowOrigin) {
   });
 }
 
+if (config.env !== "test") {
+  await api.register(rateLimit, {
+    max: 200,
+    timeWindow: "1 minute",
+  });
+}
+
 api.get("/", () => {
   return "👋";
 });
 
 api.post("/tokens", {
+  config:
+    config.env !== "test"
+      ? {
+          rateLimit: {
+            max: 1,
+            timeWindow: "1 hour",
+          },
+        }
+      : undefined,
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   preHandler: assertAuthorized,
   handler: async (request) => {
@@ -52,6 +69,15 @@ api.get("/bookmarks", async (request) => {
 });
 
 api.post("/bookmarks", {
+  config:
+    config.env !== "test"
+      ? {
+          rateLimit: {
+            max: 1,
+            timeWindow: "1 minute",
+          },
+        }
+      : undefined,
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   preHandler: assertAuthorized,
   handler: async (request) => {
