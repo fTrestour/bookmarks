@@ -176,40 +176,6 @@ describe("api", () => {
     });
   });
 
-  describe("POST /bookmarks/batch", () => {
-    it("rejects unauthorized requests", async () => {
-      const resp = await api.inject({
-        method: "POST",
-        url: "/bookmarks/batch",
-        payload: [{ url: "https://example.com/" + randomUUID() }],
-      });
-      expect(resp.statusCode).toBe(401);
-    });
-
-    it("creates multiple bookmarks on POST /bookmarks/batch", async () => {
-      const urls = [
-        "https://batch-example1.org/" + randomUUID(),
-        "https://batch-example2.org/" + randomUUID(),
-      ];
-      const response = await api.inject({
-        method: "POST",
-        url: "/bookmarks/batch",
-        headers: headers(),
-        payload: urls.map((url) => ({ url })),
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(JSON.parse(response.body)).toEqual(
-        expect.objectContaining({ success: true }),
-      );
-      expect(embedTextSpy).toHaveBeenCalledTimes(urls.length);
-      expect(getPageMetadataSpy).toHaveBeenCalledTimes(urls.length);
-
-      const bookmarks = await database.getAllBookmarks(null);
-      expect(bookmarks.map((b) => b.url)).toEqual(expect.arrayContaining(urls));
-    });
-  });
-
   describe("DELETE /tokens/:jti", () => {
     it("rejects unauthorized requests", async () => {
       const resp = await api.inject({

@@ -1,7 +1,7 @@
 import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import { getAllBookmarks, deleteActiveToken } from "./database.ts";
 import { z } from "zod";
-import { saveBookmarks } from "./domains/bookmarks.ts";
+import { saveBookmark } from "./domains/bookmarks.ts";
 import { embedText } from "./ai/embeddings.ts";
 import { getLoggerConfig } from "./logger.ts";
 import cors from "@fastify/cors";
@@ -60,28 +60,9 @@ api.post("/bookmarks", {
     });
     const body = bodySchema.parse(request.body);
 
-    const stats = await saveBookmarks([body.url]);
+    const stats = await saveBookmark(body.url);
 
     return { success: stats.failedCount === 0, stats };
-  },
-});
-
-api.post("/bookmarks/batch", {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
-  preHandler: assertAuthorized,
-  handler: async (request) => {
-    const bodySchema = z.object({
-      url: z.string().url(),
-    });
-    const batchBodySchema = z.array(bodySchema);
-    const body = batchBodySchema.parse(request.body);
-
-    const stats = await saveBookmarks(body.map((item) => item.url));
-
-    return {
-      success: stats.failedCount === 0,
-      stats,
-    };
   },
 });
 
