@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "dev-db": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/database-server", "./sqlite/db.sqlite"]
+    }
+  }
+}

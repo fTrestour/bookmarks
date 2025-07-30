@@ -37,3 +37,5 @@ sqlite/
 .aider*
 
 exports/
+
+.mcp.json
