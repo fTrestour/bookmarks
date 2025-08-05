@@ -88,7 +88,10 @@ api.get("/bookmarks", async (request, reply) => {
     searchEmbedding = embeddingResult.value;
   }
 
-  const bookmarksResult = await getAllBookmarks(searchEmbedding);
+  const bookmarksResult = await getAllBookmarks(
+    searchEmbedding,
+    search ? config.limit : undefined,
+  );
   if (bookmarksResult.isErr()) {
     handleError(bookmarksResult, reply);
     return;

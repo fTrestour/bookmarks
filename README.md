@@ -37,6 +37,8 @@ The application requires several environment variables to be configured:
 - `OPENAI_API_KEY`: Your OpenAI API key for content extraction and embeddings
 - `SCRAPING_AI_MODEL`: AI model for content extraction (e.g., `gpt-4.1-mini`)
 - `AI_EMBEDDING_MODEL`: AI model for generating embeddings (e.g., `text-embedding-3-small`)
+- `JWT_SECRET`: Secret for signing JWT tokens
+- `CORS_ALLOW_ORIGIN`: Origin for CORS (default: `*`)
 - `NODE_ENV`: Environment mode (`development` or `production`)
 
 ### Rate Limiting

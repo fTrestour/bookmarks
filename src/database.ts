@@ -158,7 +158,10 @@ export async function deleteActiveToken(jti: string) {
   }
 }
 
-export async function getAllBookmarks(searchEmbedding: number[] | null) {
+export async function getAllBookmarks(
+  searchEmbedding: number[] | null,
+  limit?: number,
+) {
   const dbResult = await getDb();
   if (dbResult.isErr()) {
     return err(dbResult.error);
@@ -173,6 +176,11 @@ export async function getAllBookmarks(searchEmbedding: number[] | null) {
       sql =
         "SELECT id, url, title, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
       args = [JSON.stringify(searchEmbedding)];
+    }
+
+    if (limit) {
+      sql += " LIMIT ?";
+      args.push(limit);
     }
 
     const result = await db.execute({ sql, args });

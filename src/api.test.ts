@@ -39,6 +39,7 @@ describe("api", () => {
       scrapingAiModel: "gpt-4o-mini",
       embeddingModel: "text-embedding-3-small",
       jwtSecret: "test_secret",
+      limit: 10,
     });
 
     getPageContentSpy.mockReset().mockResolvedValue(ok("Mock page content"));
@@ -143,6 +144,61 @@ describe("api", () => {
         id: example1.id,
         url: example1.url,
         title: example1.title,
+      });
+    });
+
+    describe("limiting behavior", () => {
+      beforeEach(async () => {
+        // Clear all existing bookmarks
+        const dbResult = await database.getDb();
+        if (dbResult.isOk()) {
+          await dbResult.value.execute("DELETE FROM bookmarks");
+        }
+      });
+
+      it("returns all bookmarks when no search query", async () => {
+        const testBookmarks = Array.from({ length: 15 }, (_, i) => ({
+          id: randomUUID(),
+          url: `https://example${i}.com/` + randomUUID(),
+          title: `Example Title ${i}`,
+          content: `Example content ${i}`,
+          embedding: randomEmbedding(),
+        }));
+
+        const insertResult = await database.insertBookmarks(testBookmarks);
+        expect(insertResult.isOk()).toBe(true);
+
+        const response = await api.inject({
+          method: "GET",
+          url: "/bookmarks",
+        });
+
+        expect(response.statusCode).toBe(200);
+        const bookmarks = JSON.parse(response.body) as unknown[];
+        expect(bookmarks).toHaveLength(15);
+      });
+
+      it("limits results to 10 bookmarks when searching", async () => {
+        const testBookmarks = Array.from({ length: 15 }, (_, i) => ({
+          id: randomUUID(),
+          url: `https://example${i}.com/` + randomUUID(),
+          title: `Example Title ${i}`,
+          content: `Example content ${i}`,
+          embedding: randomEmbedding(),
+        }));
+
+        const insertResult = await database.insertBookmarks(testBookmarks);
+        expect(insertResult.isOk()).toBe(true);
+
+        const response = await api.inject({
+          method: "GET",
+          url: "/bookmarks",
+          query: { search: "example" },
+        });
+
+        expect(response.statusCode).toBe(200);
+        const bookmarks = JSON.parse(response.body) as unknown[];
+        expect(bookmarks).toHaveLength(10);
       });
     });
   });
