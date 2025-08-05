@@ -147,6 +147,7 @@ Bookmarks are returned as an array with the following structure:
 
 - `npm run dev`: Start the development server with file watching
 - `npm start`: Start the production server
+- `npm run cli -- <command> <bookmark-id>`: Run a CLI command
 - `npm test`: Run tests once
 - `npm run test:watch`: Run tests in watch mode
 - `npm run check-types`: Run TypeScript type checking
@@ -175,9 +176,16 @@ The application is built with:
 - **Zod**: Runtime type validation
 - **JWT**: Token-based authentication
 
+### CLI Tools
+
+The application includes a command-line interface for the following tasks:
+
+- `reindex`: Reindex a bookmark
+
+```bash
+npm run cli -- <command> <bookmark-id>
+```
+
 ## TODO
 
 - [ ] LLM tracing
-- [ ] Reembed
-  - ef3c3c7f-85a5-4608-9a29-d052a68416c1
-  - f024b9d7-cb38-47ba-b794-553f5871b9d8

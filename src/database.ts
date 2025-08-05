@@ -198,6 +198,71 @@ export async function getAllBookmarks(
   }
 }
 
+export async function getBookmarkById(id: string) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
+  try {
+    const db = dbResult.value;
+    const result = await db.execute("SELECT * FROM bookmarks WHERE id = ?", [
+      id,
+    ]);
+
+    if (result.rows.length === 0) {
+      return err(createDatabaseError(`Bookmark with ID ${id} not found`, null));
+    }
+
+    const row = result.rows[0];
+    return ok({
+      id: row[0] as string,
+      url: row[1] as string,
+      title: row[2] as string,
+      content: row[3] as string,
+    });
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to retrieve bookmark: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
+export async function updateBookmark(
+  id: string,
+  content: string,
+  title: string,
+  embedding: number[],
+) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
+  try {
+    const db = dbResult.value;
+    await db.execute(
+      "UPDATE bookmarks SET content = ?, title = ?, embedding = vector32(?) WHERE id = ?",
+      [content, title, JSON.stringify(embedding), id],
+    );
+    return ok(undefined);
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to update bookmark embedding: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
 function toObject({ columns, rows }: ResultSet) {
   return rows.map((row) =>
     columns.reduce((acc, column, index) => {

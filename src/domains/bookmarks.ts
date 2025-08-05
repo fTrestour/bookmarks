@@ -27,7 +27,7 @@ export async function saveBookmark(url: string) {
   });
 }
 
-async function getBookmarkDataFromUrl(url: string) {
+export async function getBookmarkDataFromUrl(url: string) {
   try {
     new URL(url);
   } catch {
