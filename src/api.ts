@@ -1,4 +1,3 @@
-import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import type { Err } from "neverthrow";
@@ -14,12 +13,6 @@ import { getLoggerConfig } from "./logger.ts";
 const config = getConfig();
 
 export const api = fastify({ logger: getLoggerConfig() });
-
-if (config.corsAllowOrigin) {
-  api.register(cors, {
-    origin: config.corsAllowOrigin,
-  });
-}
 
 if (config.env !== "test") {
   await api.register(rateLimit, {

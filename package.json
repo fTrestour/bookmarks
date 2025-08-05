@@ -36,7 +36,6 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.23",
-    "@fastify/cors": "^11.0.1",
     "@fastify/rate-limit": "^10.3.0",
     "@libsql/client": "^0.15.10",
     "ai": "^4.3.19",
