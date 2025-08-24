@@ -6,7 +6,6 @@ import {
 } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
-import { eq } from "drizzle-orm";
 import { err, ok } from "neverthrow";
 import { getConfig } from "./config.ts";
 import {
@@ -14,16 +13,24 @@ import {
   createDatabaseError,
   createDuplicateTokenError,
 } from "./errors.ts";
-import type { ActiveToken, BookmarkWithContent } from "./types.ts";
-import { bookmarksSchema } from "./types.ts";
+import type { ActiveToken } from "./types.ts";
+import { bookmarksSchema, type BookmarkInsert } from "./types.ts";
 import * as schema from "./schema.ts";
 
 let db: Client | null = null;
 
 export async function runMigrations(client: Client) {
   try {
+    // Resolve relative to this file to avoid CWD issues
+    const urlModule = await import("node:url");
+    const pathModule = await import("node:path");
+    const migrationsFolder = pathModule.resolve(
+      pathModule.dirname(urlModule.fileURLToPath(import.meta.url)),
+      "../migrations",
+    );
+
     const drizzleDb = drizzle(client, { schema });
-    await migrate(drizzleDb, { migrationsFolder: './migrations' });
+    await migrate(drizzleDb, { migrationsFolder });
     return ok(undefined);
   } catch (error) {
     return err(
@@ -46,7 +53,7 @@ export async function getDb() {
     const { dbUri, dbAuthToken } = getConfig();
 
     const newDb = createClient({ url: dbUri, authToken: dbAuthToken });
-    
+
     // Run migrations
     const migrationsResult = await runMigrations(newDb);
     if (migrationsResult.isErr()) {
@@ -72,7 +79,22 @@ export async function getDb() {
   }
 }
 
-export async function insertBookmarks(bookmarks: BookmarkWithContent[]) {
+export async function insertBookmarks(
+  bookmarks: (
+    | BookmarkInsert
+    | {
+        id: string;
+        url: string;
+        title: string;
+        content: string;
+        embedding: number[];
+        status?: string;
+        createdAt?: Date;
+        processedAt?: Date;
+        errorMessage?: string;
+      }
+  )[],
+) {
   const dbResult = await getDb();
   if (dbResult.isErr()) {
     return err(dbResult.error);
@@ -85,16 +107,16 @@ export async function insertBookmarks(bookmarks: BookmarkWithContent[]) {
       bookmarks.map((bookmark) => {
         const now = Math.floor(Date.now() / 1000);
         const hasContent = bookmark.content && bookmark.embedding;
-        
+
         return {
-          sql: `INSERT INTO bookmarks (id, url, title, content, embedding, status, created_at, processed_at) VALUES (?, ?, ?, ?, ${hasContent ? 'vector32(?)' : '?'}, ?, ?, ?)`,
+          sql: `INSERT INTO bookmarks (id, url, title, content, embedding, status, created_at, processed_at) VALUES (?, ?, ?, ?, ${hasContent ? "vector32(?)" : "?"}, ?, ?, ?)`,
           args: [
             bookmark.id,
             bookmark.url,
-            bookmark.title || null,
-            bookmark.content || null,
+            bookmark.title ?? null,
+            bookmark.content ?? null,
             hasContent ? JSON.stringify(bookmark.embedding) : null,
-            bookmark.status || (hasContent ? 'completed' : 'pending'),
+            bookmark.status ?? (hasContent ? "completed" : "pending"),
             now,
             hasContent ? now : null,
           ],
@@ -206,9 +228,10 @@ export async function getAllBookmarks(
   try {
     const db = dbResult.value;
 
-    let sql = "SELECT id, url, title, content, embedding, status FROM bookmarks";
+    let sql =
+      "SELECT id, url, title, content, embedding, status FROM bookmarks";
     let args: InValue[] = [];
-    
+
     if (searchEmbedding) {
       // For search, only return completed bookmarks with embeddings
       sql =
@@ -216,7 +239,8 @@ export async function getAllBookmarks(
       args = [JSON.stringify(searchEmbedding)];
     } else {
       // For regular listing, show completed bookmarks (ones with title/content)
-      sql += " WHERE status = 'completed' OR (title IS NOT NULL AND content IS NOT NULL)";
+      sql +=
+        " WHERE status = 'completed' OR (title IS NOT NULL AND content IS NOT NULL)";
     }
 
     if (limit) {
@@ -225,13 +249,15 @@ export async function getAllBookmarks(
     }
 
     const result = await db.execute({ sql, args });
-    
+
     // Transform results to match expected schema, handling null titles
-    const processedResults = toObject(result).map(row => ({
-      ...row,
-      title: row.title || "Untitled"
-    }));
-    
+    const processedResults = toObject(result).map(
+      (row: Record<string, unknown>) => ({
+        ...row,
+        title: (row.title as string | null) ?? "Untitled",
+      }),
+    );
+
     const bookmarks = bookmarksSchema.parse(processedResults);
     return ok(bookmarks);
   } catch (error) {
@@ -320,18 +346,22 @@ export async function getPendingBookmarks() {
 
   try {
     const db = dbResult.value;
-    const result = await db.execute("SELECT * FROM bookmarks WHERE status IN ('pending', 'processing')");
-    
-    return ok(result.rows.map(row => ({
-      id: row[0] as string,
-      url: row[1] as string,
-      title: row[2] as string | null,
-      content: row[3] as string | null,
-      status: row[5] as string,
-      createdAt: new Date((row[6] as number) * 1000),
-      processedAt: row[7] ? new Date((row[7] as number) * 1000) : null,
-      errorMessage: row[8] as string | null,
-    })));
+    const result = await db.execute(
+      "SELECT * FROM bookmarks WHERE status IN ('pending', 'processing')",
+    );
+
+    return ok(
+      result.rows.map((row) => ({
+        id: row[0] as string,
+        url: row[1] as string,
+        title: row[2] as string | null,
+        content: row[3] as string | null,
+        status: row[5] as string,
+        createdAt: new Date((row[6] as number) * 1000),
+        processedAt: row[7] ? new Date((row[7] as number) * 1000) : null,
+        errorMessage: row[8] as string | null,
+      })),
+    );
   } catch (error) {
     return err(
       createDatabaseError(
@@ -344,7 +374,11 @@ export async function getPendingBookmarks() {
   }
 }
 
-export async function updateBookmarkStatus(id: string, status: string, errorMessage?: string) {
+export async function updateBookmarkStatus(
+  id: string,
+  status: string,
+  errorMessage?: string,
+) {
   const dbResult = await getDb();
   if (dbResult.isErr()) {
     return err(dbResult.error);
@@ -353,19 +387,24 @@ export async function updateBookmarkStatus(id: string, status: string, errorMess
   try {
     const db = dbResult.value;
     const now = Math.floor(Date.now() / 1000);
-    
-    if (status === 'completed') {
+
+    if (status === "completed" || status === "failed") {
       await db.execute(
-        "UPDATE bookmarks SET status = ?, processed_at = ?, error_message = NULL WHERE id = ?",
-        [status, now, id],
+        "UPDATE bookmarks SET status = ?, processed_at = ?, error_message = ? WHERE id = ?",
+        [
+          status,
+          now,
+          status === "completed" ? null : (errorMessage ?? null),
+          id,
+        ],
       );
     } else {
       await db.execute(
         "UPDATE bookmarks SET status = ?, error_message = ? WHERE id = ?",
-        [status, errorMessage || null, id],
+        [status, errorMessage ?? null, id],
       );
     }
-    
+
     return ok(undefined);
   } catch (error) {
     return err(

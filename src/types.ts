@@ -6,6 +6,13 @@ export const bookmarkSchema = z.object({
   title: z.string().min(1),
 });
 
+// Schema for DB operations that allows nullable titles
+export const dbBookmarkSchema = z.object({
+  id: z.string().uuid(),
+  url: z.string().url(),
+  title: z.string().min(1).nullable(),
+});
+
 export const bookmarksSchema = z.array(bookmarkSchema);
 
 export type Bookmark = z.infer<typeof bookmarkSchema>;
@@ -18,6 +25,19 @@ export type BookmarkWithContent = Bookmark & {
   processedAt?: Date;
   errorMessage?: string;
 };
+
+// Type for DB inserts that allows nullable title
+export interface BookmarkInsert {
+  id: string;
+  url: string;
+  title: string | null;
+  content: string | null;
+  embedding: number[] | null;
+  status?: string;
+  createdAt?: Date;
+  processedAt?: Date;
+  errorMessage?: string;
+}
 
 export const activeTokenSchema = z.object({
   jti: z.string().uuid(),

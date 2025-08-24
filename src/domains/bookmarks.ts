@@ -2,7 +2,11 @@ import { randomUUID } from "crypto";
 import { err, ok } from "neverthrow";
 import { embedText } from "../ai/embeddings.ts";
 import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
-import { insertBookmarks, updateBookmark, updateBookmarkStatus } from "../database.ts";
+import {
+  insertBookmarks,
+  updateBookmark,
+  updateBookmarkStatus,
+} from "../database.ts";
 import { createInvalidUrlError } from "../errors.ts";
 
 // Fast path: Create bookmark immediately without content
@@ -15,24 +19,26 @@ export async function saveBookmark(url: string) {
 
   const bookmarkId = randomUUID();
   const now = new Date();
-  
+
   // Insert bookmark with pending status
-  const insertResult = await insertBookmarks([{
-    id: bookmarkId,
-    url,
-    title: null,
-    content: null,
-    embedding: null,
-    status: 'pending',
-    createdAt: now,
-  }]);
+  const insertResult = await insertBookmarks([
+    {
+      id: bookmarkId,
+      url,
+      title: null,
+      content: null,
+      embedding: null,
+      status: "pending",
+      createdAt: now,
+    },
+  ]);
 
   if (insertResult.isErr()) {
     return err(insertResult.error);
   }
 
   // Queue async processing (don't await)
-  processBookmarkAsync(bookmarkId, url).catch(error => {
+  processBookmarkAsync(bookmarkId, url).catch((error: unknown) => {
     console.error(`Failed to process bookmark ${bookmarkId}:`, error);
   });
 
@@ -70,12 +76,23 @@ export async function saveBookmarkSync(url: string) {
 async function processBookmarkAsync(bookmarkId: string, url: string) {
   try {
     // Update status to processing
-    await updateBookmarkStatus(bookmarkId, 'processing');
+    {
+      const r = await updateBookmarkStatus(bookmarkId, "processing");
+      if (r.isErr()) {
+        console.error(`Failed to set processing for ${bookmarkId}:`, r.error);
+      }
+    }
 
     // Get page content and metadata
     const contentResult = await getPageContent(url);
     if (contentResult.isErr()) {
-      await updateBookmarkStatus(bookmarkId, 'failed', contentResult.error.message);
+      const r = await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        contentResult.error.message,
+      );
+      if (r.isErr())
+        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
       return;
     }
 
@@ -87,12 +104,24 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
     ]);
 
     if (embeddingResult.isErr()) {
-      await updateBookmarkStatus(bookmarkId, 'failed', embeddingResult.error.message);
+      const r = await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        embeddingResult.error.message,
+      );
+      if (r.isErr())
+        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
       return;
     }
 
     if (metadataResult.isErr()) {
-      await updateBookmarkStatus(bookmarkId, 'failed', metadataResult.error.message);
+      const r = await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        metadataResult.error.message,
+      );
+      if (r.isErr())
+        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
       return;
     }
 
@@ -105,15 +134,28 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
     );
 
     if (updateResult.isErr()) {
-      await updateBookmarkStatus(bookmarkId, 'failed', updateResult.error.message);
+      const r = await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        updateResult.error.message,
+      );
+      if (r.isErr())
+        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
       return;
     }
 
     // Mark as completed
-    await updateBookmarkStatus(bookmarkId, 'completed');
+    {
+      const r = await updateBookmarkStatus(bookmarkId, "completed");
+      if (r.isErr())
+        console.error(`Failed to set completed for ${bookmarkId}:`, r.error);
+    }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    await updateBookmarkStatus(bookmarkId, 'failed', errorMessage);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    const r = await updateBookmarkStatus(bookmarkId, "failed", errorMessage);
+    if (r.isErr())
+      console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
   }
 }
 
