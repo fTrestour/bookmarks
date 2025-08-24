@@ -1,3 +1,21 @@
+# Prime
+
+Here are some instructions to load essential context.
+
+## Instructions
+
+- Run `git ls-files` to understand the codebase structure and file organization
+- Read the README.md to understand the project purpose, setup instructions, and key information
+- Read package.json to understand the project dependencies and scripts
+- Provide a concise overview of the project based on the gathered context
+
+## Context
+
+- Codebase structure git accessible: !`git ls-files`
+- Codebase structure all: !`eza . --tree`
+- Project README: @README.md
+- Project dependencies: @package.json
+
 # Code style
 
 - Use ES modules (import/export) syntax, not CommonJS (require)
