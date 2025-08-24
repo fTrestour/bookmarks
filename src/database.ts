@@ -4,6 +4,9 @@ import {
   type InValue,
   type ResultSet,
 } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { migrate } from "drizzle-orm/libsql/migrator";
+import { eq } from "drizzle-orm";
 import { err, ok } from "neverthrow";
 import { getConfig } from "./config.ts";
 import {
@@ -13,8 +16,27 @@ import {
 } from "./errors.ts";
 import type { ActiveToken, BookmarkWithContent } from "./types.ts";
 import { bookmarksSchema } from "./types.ts";
+import * as schema from "./schema.ts";
 
 let db: Client | null = null;
+
+export async function runMigrations(client: Client) {
+  try {
+    const drizzleDb = drizzle(client, { schema });
+    await migrate(drizzleDb, { migrationsFolder: './migrations' });
+    return ok(undefined);
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to run migrations: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
 export async function getDb() {
   if (db) {
     return ok(db);
@@ -24,12 +46,18 @@ export async function getDb() {
     const { dbUri, dbAuthToken } = getConfig();
 
     const newDb = createClient({ url: dbUri, authToken: dbAuthToken });
-    await newDb.execute(
-      "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY NOT NULL, url TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, embedding F32_BLOB(1536) NOT NULL)",
-    );
-    await newDb.execute(
-      "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL)",
-    );
+    
+    // Run migrations
+    const migrationsResult = await runMigrations(newDb);
+    if (migrationsResult.isErr()) {
+      // Fallback to legacy table creation if migrations fail
+      await newDb.execute(
+        "CREATE TABLE IF NOT EXISTS bookmarks (id TEXT PRIMARY KEY NOT NULL, url TEXT UNIQUE NOT NULL, title TEXT NOT NULL, content TEXT NOT NULL, embedding F32_BLOB(1536) NOT NULL)",
+      );
+      await newDb.execute(
+        "CREATE TABLE IF NOT EXISTS active_tokens (jti TEXT PRIMARY KEY NOT NULL, name TEXT NOT NULL)",
+      );
+    }
 
     db = newDb;
 
@@ -54,16 +82,24 @@ export async function insertBookmarks(bookmarks: BookmarkWithContent[]) {
     const db = dbResult.value;
 
     await db.batch(
-      bookmarks.map((bookmark) => ({
-        sql: `INSERT INTO bookmarks (id, url, title, content, embedding) VALUES (?, ?, ?, ?, vector32(?))`,
-        args: [
-          bookmark.id,
-          bookmark.url,
-          bookmark.title,
-          bookmark.content,
-          JSON.stringify(bookmark.embedding),
-        ],
-      })),
+      bookmarks.map((bookmark) => {
+        const now = Math.floor(Date.now() / 1000);
+        const hasContent = bookmark.content && bookmark.embedding;
+        
+        return {
+          sql: `INSERT INTO bookmarks (id, url, title, content, embedding, status, created_at, processed_at) VALUES (?, ?, ?, ?, ${hasContent ? 'vector32(?)' : '?'}, ?, ?, ?)`,
+          args: [
+            bookmark.id,
+            bookmark.url,
+            bookmark.title || null,
+            bookmark.content || null,
+            hasContent ? JSON.stringify(bookmark.embedding) : null,
+            bookmark.status || (hasContent ? 'completed' : 'pending'),
+            now,
+            hasContent ? now : null,
+          ],
+        };
+      }),
       "write",
     );
 
@@ -170,11 +206,11 @@ export async function getAllBookmarks(
   try {
     const db = dbResult.value;
 
-    let sql = "SELECT * FROM bookmarks";
+    let sql = "SELECT * FROM bookmarks WHERE status = 'completed'";
     let args: InValue[] = [];
     if (searchEmbedding) {
       sql =
-        "SELECT id, url, title, content, embedding FROM bookmarks ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
+        "SELECT id, url, title, content, embedding FROM bookmarks WHERE status = 'completed' AND embedding IS NOT NULL ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
       args = [JSON.stringify(searchEmbedding)];
     }
 
@@ -255,6 +291,74 @@ export async function updateBookmark(
     return err(
       createDatabaseError(
         `Failed to update bookmark embedding: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
+// New functions for async processing
+export async function getPendingBookmarks() {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
+  try {
+    const db = dbResult.value;
+    const result = await db.execute("SELECT * FROM bookmarks WHERE status IN ('pending', 'processing')");
+    
+    return ok(result.rows.map(row => ({
+      id: row[0] as string,
+      url: row[1] as string,
+      title: row[2] as string | null,
+      content: row[3] as string | null,
+      status: row[5] as string,
+      createdAt: new Date((row[6] as number) * 1000),
+      processedAt: row[7] ? new Date((row[7] as number) * 1000) : null,
+      errorMessage: row[8] as string | null,
+    })));
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to retrieve pending bookmarks: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
+export async function updateBookmarkStatus(id: string, status: string, errorMessage?: string) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+
+  try {
+    const db = dbResult.value;
+    const now = Math.floor(Date.now() / 1000);
+    
+    if (status === 'completed') {
+      await db.execute(
+        "UPDATE bookmarks SET status = ?, processed_at = ?, error_message = NULL WHERE id = ?",
+        [status, now, id],
+      );
+    } else {
+      await db.execute(
+        "UPDATE bookmarks SET status = ?, error_message = ? WHERE id = ?",
+        [status, errorMessage || null, id],
+      );
+    }
+    
+    return ok(undefined);
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to update bookmark status: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
         error,
