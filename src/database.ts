@@ -206,12 +206,17 @@ export async function getAllBookmarks(
   try {
     const db = dbResult.value;
 
-    let sql = "SELECT * FROM bookmarks WHERE status = 'completed'";
+    let sql = "SELECT id, url, title, content, embedding, status FROM bookmarks";
     let args: InValue[] = [];
+    
     if (searchEmbedding) {
+      // For search, only return completed bookmarks with embeddings
       sql =
-        "SELECT id, url, title, content, embedding FROM bookmarks WHERE status = 'completed' AND embedding IS NOT NULL ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
+        "SELECT id, url, title, content, embedding, status FROM bookmarks WHERE status = 'completed' AND embedding IS NOT NULL ORDER BY vector_distance_cos(embedding, vector32(?)) ASC";
       args = [JSON.stringify(searchEmbedding)];
+    } else {
+      // For regular listing, show completed bookmarks (ones with title/content)
+      sql += " WHERE status = 'completed' OR (title IS NOT NULL AND content IS NOT NULL)";
     }
 
     if (limit) {
@@ -220,7 +225,14 @@ export async function getAllBookmarks(
     }
 
     const result = await db.execute({ sql, args });
-    const bookmarks = bookmarksSchema.parse(toObject(result));
+    
+    // Transform results to match expected schema, handling null titles
+    const processedResults = toObject(result).map(row => ({
+      ...row,
+      title: row.title || "Untitled"
+    }));
+    
+    const bookmarks = bookmarksSchema.parse(processedResults);
     return ok(bookmarks);
   } catch (error) {
     return err(

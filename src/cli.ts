@@ -1,5 +1,6 @@
 import { embedText } from "./ai/embeddings.ts";
-import { getBookmarkById, updateBookmark } from "./database.ts";
+import { getBookmarkById, updateBookmark, getPendingBookmarks } from "./database.ts";
+import { reprocessBookmark } from "./domains/bookmarks.ts";
 
 async function reindexBookmark(id: string) {
   console.log(`🔄 Reindexing bookmark with ID: ${id}`);
@@ -45,6 +46,43 @@ async function reindexBookmark(id: string) {
   console.log(`🎉 Successfully reindexed bookmark with ID: ${id}`);
 }
 
+async function reprocessPendingBookmarks() {
+  console.log(`🔄 Finding pending bookmarks...`);
+  
+  const pendingResult = await getPendingBookmarks();
+  if (pendingResult.isErr()) {
+    console.error(`❌ Error: ${pendingResult.error.message}`);
+    return process.exit(1);
+  }
+
+  const pendingBookmarks = pendingResult.value;
+  
+  if (pendingBookmarks.length === 0) {
+    console.log(`✅ No pending bookmarks found.`);
+    return;
+  }
+
+  console.log(`📋 Found ${pendingBookmarks.length} pending bookmark(s) to process:`);
+  
+  for (const bookmark of pendingBookmarks) {
+    console.log(`\n📄 Processing: ${bookmark.url} (${bookmark.id})`);
+    console.log(`📅 Created: ${bookmark.createdAt.toLocaleString()}`);
+    if (bookmark.errorMessage) {
+      console.log(`⚠️ Previous error: ${bookmark.errorMessage}`);
+    }
+    
+    try {
+      await reprocessBookmark(bookmark.id, bookmark.url);
+      console.log(`✅ Successfully processed bookmark`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`❌ Failed to process bookmark: ${errorMessage}`);
+    }
+  }
+  
+  console.log(`\n🎉 Finished processing ${pendingBookmarks.length} bookmark(s)`);
+}
+
 // Main CLI logic
 async function main() {
   const args = process.argv.slice(2);
@@ -54,10 +92,12 @@ async function main() {
 📚 Bookmarks CLI
 
 Usage:
-  npm run cli -- reindex <bookmark-id>
+  npm run cli -- reindex <bookmark-id>              # Re-embed a specific bookmark
+  npm run cli -- reprocess-pending                  # Process all pending bookmarks
 
 Description:
-  Reindexes a bookmark by re-embedding its content, and updating the database.
+  - reindex: Re-embeds an existing bookmark's content and updates the database
+  - reprocess-pending: Processes all bookmarks with 'pending' or 'processing' status
 `);
     return process.exit(0);
   }
@@ -76,8 +116,10 @@ Description:
       return process.exit(1);
     }
     await reindexBookmark(bookmarkId);
+  } else if (command === "reprocess-pending") {
+    await reprocessPendingBookmarks();
   } else {
-    console.error(`❌ Error: Invalid command. Expected "reindex".`);
+    console.error(`❌ Error: Invalid command. Expected "reindex" or "reprocess-pending".`);
     return process.exit(1);
   }
 }
