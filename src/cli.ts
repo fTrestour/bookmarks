@@ -1,5 +1,9 @@
 import { embedText } from "./ai/embeddings.ts";
-import { getBookmarkById, updateBookmark, getPendingBookmarks } from "./database.ts";
+import {
+  getBookmarkById,
+  updateBookmark,
+  getPendingBookmarks,
+} from "./database.ts";
 import { reprocessBookmark } from "./domains/bookmarks.ts";
 
 async function reindexBookmark(id: string) {
@@ -18,6 +22,13 @@ async function reindexBookmark(id: string) {
 
   // Re-extract content from URL
   console.log(`⚙️️ Re-embedding content...`);
+  if (!bookmark.content || bookmark.content.trim().length === 0) {
+    console.error(
+      `❌ No content available on the bookmark; cannot re-embed. Consider running "reprocess-pending" or re-fetching content first.`,
+    );
+    return process.exit(1);
+  }
+
   const embeddingResult = await embedText(bookmark.content);
   if (embeddingResult.isErr()) {
     console.error(
@@ -48,7 +59,7 @@ async function reindexBookmark(id: string) {
 
 async function reprocessPendingBookmarks() {
   console.log(`🔄 Finding pending bookmarks...`);
-  
+
   const pendingResult = await getPendingBookmarks();
   if (pendingResult.isErr()) {
     console.error(`❌ Error: ${pendingResult.error.message}`);
@@ -56,31 +67,36 @@ async function reprocessPendingBookmarks() {
   }
 
   const pendingBookmarks = pendingResult.value;
-  
+
   if (pendingBookmarks.length === 0) {
     console.log(`✅ No pending bookmarks found.`);
     return;
   }
 
-  console.log(`📋 Found ${pendingBookmarks.length} pending bookmark(s) to process:`);
-  
+  console.log(
+    `📋 Found ${pendingBookmarks.length} pending bookmark(s) to process:`,
+  );
+
   for (const bookmark of pendingBookmarks) {
     console.log(`\n📄 Processing: ${bookmark.url} (${bookmark.id})`);
     console.log(`📅 Created: ${bookmark.createdAt.toLocaleString()}`);
     if (bookmark.errorMessage) {
       console.log(`⚠️ Previous error: ${bookmark.errorMessage}`);
     }
-    
+
     try {
       await reprocessBookmark(bookmark.id, bookmark.url);
       console.log(`✅ Successfully processed bookmark`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       console.error(`❌ Failed to process bookmark: ${errorMessage}`);
     }
   }
-  
-  console.log(`\n🎉 Finished processing ${pendingBookmarks.length} bookmark(s)`);
+
+  console.log(
+    `\n🎉 Finished processing ${pendingBookmarks.length} bookmark(s)`,
+  );
 }
 
 // Main CLI logic
@@ -119,7 +135,12 @@ Description:
   } else if (command === "reprocess-pending") {
     await reprocessPendingBookmarks();
   } else {
-    console.error(`❌ Error: Invalid command. Expected "reindex" or "reprocess-pending".`);
+    console.error(
+      `❌ Error: Invalid command. Expected "reindex" or "reprocess-pending".`,
+    );
+    console.log(
+      `\nTry:\n  npm run cli -- reindex <bookmark-id>\n  npm run cli -- reprocess-pending\n`,
+    );
     return process.exit(1);
   }
 }
