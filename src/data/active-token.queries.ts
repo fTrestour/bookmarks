@@ -2,10 +2,10 @@ import { eq, sql } from "drizzle-orm";
 import { err, ok } from "neverthrow";
 import { getDb } from "./database.ts";
 import { createDatabaseError, createDuplicateTokenError } from "../errors.ts";
-import type { ActiveToken } from "../types.ts";
 import * as schema from "../schema.ts";
+import type { NewActiveToken } from "../schema.ts";
 
-export async function insertActiveToken({ jti, name }: ActiveToken) {
+export async function insertActiveToken({ jti, name }: NewActiveToken) {
   const dbResult = await getDb();
   if (dbResult.isErr()) {
     return err(dbResult.error);

@@ -4,7 +4,7 @@ import {
   updateBookmark,
   getPendingBookmarks,
 } from "./data/bookmarks.queries.ts";
-import { processBookmark } from "./domains/bookmarks.ts";
+import { processBookmark, saveBookmark } from "./domains/bookmarks.ts";
 
 async function reindexBookmark(id: string) {
   console.log(`🔄 Reindexing bookmark with ID: ${id}`);
@@ -41,7 +41,7 @@ async function reindexBookmark(id: string) {
   const updateResult = await updateBookmark(
     id,
     bookmark.content,
-    bookmark.title,
+    bookmark.title ?? "Untitled", // FIXME
     embedding,
   );
 
@@ -53,6 +53,24 @@ async function reindexBookmark(id: string) {
   }
 
   console.log(`🎉 Successfully reindexed bookmark with ID: ${id}`);
+}
+
+async function addBookmark(url: string) {
+  console.log(`🔖 Adding bookmark: ${url}`);
+
+  const result = await saveBookmark(url);
+  if (result.isErr()) {
+    console.error(`❌ Failed to add bookmark: ${result.error.message}`);
+    console.error(result.error.cause);
+    return process.exit(1);
+  }
+
+  const stats = result.value;
+  console.log(`🎉 Successfully added bookmark!`);
+  console.log(
+    `📊 Stats: ${stats.processedCount} processed, ${stats.successCount} successful, ${stats.failedCount} failed`,
+  );
+  console.log(`⚙️ Bookmark is being processed in the background...`);
 }
 
 async function reprocessBookmarks() {
@@ -104,10 +122,12 @@ async function main() {
 📚 Bookmarks CLI
 
 Usage:
+  npm run cli -- add <url>                          # Add a new bookmark
   npm run cli -- reindex <bookmark-id>              # Re-embed a specific bookmark
   npm run cli -- reprocess-pending                  # Process all pending bookmarks
 
 Description:
+  - add: Add a new bookmark URL to the system (same logic as POST /bookmarks)
   - reindex: Re-embeds an existing bookmark's content and updates the database
   - reprocess-pending: Processes all bookmarks with 'pending' or 'processing' status
 `);
@@ -115,7 +135,16 @@ Description:
   }
 
   const command = args[0];
-  if (command === "reindex") {
+  if (command === "add") {
+    const url = args[1];
+
+    if (!url) {
+      console.error(`❌ Error: Missing URL. Usage: npm run cli -- add <url>`);
+      return process.exit(1);
+    }
+
+    await addBookmark(url);
+  } else if (command === "reindex") {
     const bookmarkId = args[1];
 
     if (!bookmarkId) {
@@ -139,10 +168,10 @@ Description:
     await reprocessBookmarks();
   } else {
     console.error(
-      `❌ Error: Invalid command. Expected "reindex" or "reprocess-pending".`,
+      `❌ Error: Invalid command. Expected "add", "reindex" or "reprocess-pending".`,
     );
     console.log(
-      `\nTry:\n  npm run cli -- reindex <bookmark-id>\n  npm run cli -- reprocess-pending\n`,
+      `\nTry:\n  npm run cli -- add <url>\n  npm run cli -- reindex <bookmark-id>\n  npm run cli -- reprocess-pending\n`,
     );
     return process.exit(1);
   }

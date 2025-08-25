@@ -2,15 +2,10 @@ import { eq, and, inArray, sql } from "drizzle-orm";
 import { err, ok } from "neverthrow";
 import { getDb } from "./database.ts";
 import { createDatabaseError } from "../errors.ts";
-import {
-  bookmarksSchema,
-  bookmarkWithContentSchema,
-  pendingBookmarkSchema,
-  type BookmarkInsert,
-} from "../types.ts";
 import * as schema from "../schema.ts";
+import type { NewBookmark } from "../schema.ts";
 
-export async function insertBookmark(bookmark: BookmarkInsert) {
+export async function insertBookmark(bookmark: NewBookmark) {
   const dbResult = await getDb();
   if (dbResult.isErr()) {
     return err(dbResult.error);
@@ -65,22 +60,20 @@ export async function getAllCompletedBookmarks(
           sql`vector_distance_cos(embedding, vector32(${JSON.stringify(searchEmbedding)})) ASC`,
         );
 
-      const result = limit
+      const bookmarks = limit
         ? await queryWithSearch.limit(limit)
         : await queryWithSearch;
 
-      const bookmarks = bookmarksSchema.parse(result);
       return ok(bookmarks);
     } else {
       const queryWithoutSearch = baseSelect.where(
         eq(schema.bookmarks.status, "completed"),
       );
 
-      const result = limit
+      const bookmarks = limit
         ? await queryWithoutSearch.limit(limit)
         : await queryWithoutSearch;
 
-      const bookmarks = bookmarksSchema.parse(result);
       return ok(bookmarks);
     }
   } catch (error) {
@@ -113,8 +106,7 @@ export async function getBookmarkById(id: string) {
       return err(createDatabaseError(`Bookmark with ID ${id} not found`, null));
     }
 
-    const bookmark = bookmarkWithContentSchema.parse(result[0]);
-    return ok(bookmark);
+    return ok(result[0]);
   } catch (error) {
     return err(
       createDatabaseError(
@@ -175,11 +167,7 @@ export async function getPendingBookmarks() {
       .from(schema.bookmarks)
       .where(inArray(schema.bookmarks.status, ["pending", "processing"]));
 
-    const pendingBookmarks = result.map((row) =>
-      pendingBookmarkSchema.parse(row),
-    );
-
-    return ok(pendingBookmarks);
+    return ok(result);
   } catch (error) {
     return err(
       createDatabaseError(

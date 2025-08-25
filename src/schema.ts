@@ -20,7 +20,7 @@ export const activeTokens = sqliteTable("active_tokens", {
   name: text("name").notNull(),
 });
 
-export type DbBookmark = typeof bookmarks.$inferSelect;
-export type NewDbBookmark = typeof bookmarks.$inferInsert;
-export type DbActiveToken = typeof activeTokens.$inferSelect;
-export type NewDbActiveToken = typeof activeTokens.$inferInsert;
+export type Bookmark = typeof bookmarks.$inferSelect;
+export type NewBookmark = typeof bookmarks.$inferInsert;
+export type ActiveToken = typeof activeTokens.$inferSelect;
+export type NewActiveToken = typeof activeTokens.$inferInsert;
