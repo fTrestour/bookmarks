@@ -15,6 +15,13 @@
       "when": 1756108269133,
       "tag": "0001_outgoing_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1756116945952,
+      "tag": "0002_kind_vampiro",
+      "breakpoints": true
     }
   ]
 }

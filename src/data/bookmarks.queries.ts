@@ -1,8 +1,9 @@
-import { eq, and, isNotNull, sql } from "drizzle-orm";
+import { eq, isNotNull, sql } from "drizzle-orm";
 import { err, ok } from "neverthrow";
 import { createDatabaseError } from "../errors.ts";
 import { getDb } from "./database.ts";
 import { bookmarks, type NewBookmark } from "./schema.ts";
+import type { BookmarkStatus } from "../domains/types.ts";
 
 export async function insertBookmarks(bookmarksToInsert: NewBookmark[]) {
   const dbResult = await getDb();
@@ -116,13 +117,57 @@ export async function updateBookmark(
   try {
     await db
       .update(bookmarks)
-      .set({ content, title, embedding })
+      .set({
+        content,
+        title,
+        embedding,
+        status: "completed" as BookmarkStatus,
+        processedAt: Date.now(),
+      })
       .where(eq(bookmarks.id, id));
     return ok();
   } catch (error) {
     return err(
       createDatabaseError(
         `Failed to update bookmark embedding: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        error,
+      ),
+    );
+  }
+}
+
+export async function updateBookmarkStatus(
+  id: string,
+  status: BookmarkStatus,
+  errorMessage?: string,
+) {
+  const dbResult = await getDb();
+  if (dbResult.isErr()) {
+    return err(dbResult.error);
+  }
+  const db = dbResult.value;
+
+  try {
+    const updateData: {
+      status: string;
+      processedAt?: number;
+      errorMessage?: string;
+    } = { status };
+    if (status === ("completed" as BookmarkStatus)) {
+      updateData.processedAt = Date.now();
+    }
+    if (errorMessage) {
+      updateData.errorMessage = errorMessage;
+    }
+
+    await db.update(bookmarks).set(updateData).where(eq(bookmarks.id, id));
+    return ok();
+  } catch (error) {
+    return err(
+      createDatabaseError(
+        `Failed to update bookmark status: ${
           error instanceof Error ? error.message : "Unknown error"
         }`,
         error,
@@ -142,7 +187,7 @@ export async function getPendingBookmarks() {
     const result = await db
       .select()
       .from(bookmarks)
-      .where(and(isNotNull(bookmarks.content), isNotNull(bookmarks.embedding)));
+      .where(eq(bookmarks.status, "pending" as BookmarkStatus));
 
     return ok(result);
   } catch (error) {
