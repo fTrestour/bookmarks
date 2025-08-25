@@ -26,7 +26,6 @@ export async function saveBookmark(url: string) {
       id: bookmarkId,
       url,
       status: "pending",
-      createdAt: Date.now(),
     },
   ]);
 

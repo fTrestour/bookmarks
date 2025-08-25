@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "16069588-e053-47d5-b206-e35023a8f7a8",
+  "id": "722990a7-b0c6-41a5-9b71-a2b1531aa916",
   "prevId": "9a9c4215-1b53-485b-aba3-451fd8de7ec9",
   "tables": {
     "active_tokens": {
@@ -73,15 +73,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'completed'"
+          "default": "'pending'"
         },
         "created_at": {
           "name": "created_at",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "CURRENT_TIMESTAMP"
+          "notNull": false,
+          "autoincrement": false
         },
         "processed_at": {
           "name": "processed_at",

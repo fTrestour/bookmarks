@@ -35,9 +35,7 @@ export const bookmarks = sqliteTable(
       sql`NULL`,
     ),
     status: text().notNull().default("pending"),
-    createdAt: integer("created_at")
-      .notNull()
-      .default(sql`CURRENT_TIMESTAMP`),
+    createdAt: integer("created_at"),
     processedAt: integer("processed_at"),
     errorMessage: text("error_message"),
   },
