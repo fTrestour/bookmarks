@@ -91,7 +91,14 @@ api.get("/bookmarks", async (request, reply) => {
     return;
   }
 
-  return bookmarksResult.value;
+  // Filter to only return expected fields
+  const filteredBookmarks = bookmarksResult.value.map((bookmark) => ({
+    id: bookmark.id,
+    url: bookmark.url,
+    title: bookmark.title,
+  }));
+
+  return filteredBookmarks;
 });
 
 api.post("/bookmarks", {

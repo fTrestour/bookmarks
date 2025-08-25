@@ -7,12 +7,12 @@ import {
   isActiveToken,
 } from "../data/active-tokens.queries.ts";
 import { createInvalidTokenError } from "../errors.ts";
-import { activeTokenSchema } from "../types.ts";
+import { type NewActiveToken } from "../data/schema.ts";
 
 export async function createToken(name: string) {
   const { jwtSecret } = getConfig();
   const jti = randomUUID();
-  const payload = { jti, name };
+  const payload: NewActiveToken = { jti, name };
   const token = jwt.sign(payload, jwtSecret, {
     algorithm: "HS256",
   });
@@ -25,7 +25,7 @@ export function readToken(token: string) {
   try {
     const { jwtSecret } = getConfig();
     const decoded = jwt.verify(token, jwtSecret);
-    const parsedToken = activeTokenSchema.parse(decoded);
+    const parsedToken = decoded as NewActiveToken;
     return ok(parsedToken);
   } catch (error) {
     return err(createInvalidTokenError(error));

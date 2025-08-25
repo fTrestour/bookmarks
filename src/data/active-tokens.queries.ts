@@ -1,9 +1,10 @@
+import { eq } from "drizzle-orm";
 import { err, ok } from "neverthrow";
 import { createDatabaseError, createDuplicateTokenError } from "../errors.ts";
-import type { ActiveToken } from "../types.ts";
 import { getDb } from "./database.ts";
+import { activeTokens, type NewActiveToken } from "./schema.ts";
 
-export async function insertActiveToken({ jti, name }: ActiveToken) {
+export async function insertActiveToken({ jti, name }: NewActiveToken) {
   const dbResult = await getDb();
   if (dbResult.isErr()) {
     return err(dbResult.error);
@@ -11,11 +12,8 @@ export async function insertActiveToken({ jti, name }: ActiveToken) {
   const db = dbResult.value;
 
   try {
-    await db.execute("INSERT INTO active_tokens (jti, name) VALUES (?, ?)", [
-      jti,
-      name,
-    ]);
-    return ok(undefined);
+    await db.insert(activeTokens).values({ jti, name });
+    return ok();
   } catch (error) {
     if (
       error instanceof Error &&
@@ -43,10 +41,13 @@ export async function isActiveToken(jti: string) {
   const db = dbResult.value;
 
   try {
-    const res = await db.execute("SELECT 1 FROM active_tokens WHERE jti = ?", [
-      jti,
-    ]);
-    return ok(res.rows.length > 0);
+    const result = await db
+      .select()
+      .from(activeTokens)
+      .where(eq(activeTokens.jti, jti))
+      .limit(1);
+
+    return ok(result.length > 0);
   } catch (error) {
     return err(
       createDatabaseError(
@@ -67,8 +68,8 @@ export async function deleteActiveToken(jti: string) {
   const db = dbResult.value;
 
   try {
-    await db.execute("DELETE FROM active_tokens WHERE jti = ?", [jti]);
-    return ok(undefined);
+    await db.delete(activeTokens).where(eq(activeTokens.jti, jti));
+    return ok();
   } catch (error) {
     return err(
       createDatabaseError(

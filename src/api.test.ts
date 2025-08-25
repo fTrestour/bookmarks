@@ -10,6 +10,7 @@ import { createToken } from "./domains/authentication.ts";
 import { ok } from "neverthrow";
 import { getAllBookmarks, insertBookmarks } from "./data/bookmarks.queries.ts";
 import { isActiveToken } from "./data/active-tokens.queries.ts";
+import { bookmarks } from "./data/schema.ts";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
@@ -154,7 +155,7 @@ describe("api", () => {
         // Clear all existing bookmarks
         const dbResult = await database.getDb();
         if (dbResult.isOk()) {
-          await dbResult.value.execute("DELETE FROM bookmarks");
+          await dbResult.value.delete(bookmarks);
         }
       });
 

@@ -12,11 +12,15 @@ async function reindexBookmark(id: string) {
   }
 
   const bookmark = bookmarkResult.value;
-  console.log(`📄 Found bookmark: ${bookmark.title}`);
+  console.log(`📄 Found bookmark: ${bookmark.title ?? "No title"}`);
   console.log(`🔗 URL: ${bookmark.url}`);
 
   // Re-extract content from URL
   console.log(`⚙️️ Re-embedding content...`);
+  if (!bookmark.content) {
+    console.error(`❌ Error: Bookmark has no content to re-embed`);
+    return process.exit(1);
+  }
   const embeddingResult = await embedText(bookmark.content);
   if (embeddingResult.isErr()) {
     console.error(
@@ -32,7 +36,7 @@ async function reindexBookmark(id: string) {
   const updateResult = await updateBookmark(
     id,
     bookmark.content,
-    bookmark.title,
+    bookmark.title ?? "",
     embedding,
   );
   if (updateResult.isErr()) {
