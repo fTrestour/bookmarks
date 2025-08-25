@@ -1,5 +1,5 @@
 import { embedText } from "./ai/embeddings.ts";
-import { getBookmarkById, updateBookmark } from "./database.ts";
+import { getBookmarkById, updateBookmark } from "./data/bookmarks.queries.ts";
 
 async function reindexBookmark(id: string) {
   console.log(`🔄 Reindexing bookmark with ID: ${id}`);

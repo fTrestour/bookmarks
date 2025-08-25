@@ -1,13 +1,15 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { api } from "./api.ts";
 import { vi } from "vitest";
-import * as database from "./database.ts";
+import * as database from "./data/database.ts";
 import * as config from "./config.ts";
 import * as scrapper from "./ai/scrapper.ts";
 import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
 import { createToken } from "./domains/authentication.ts";
 import { ok } from "neverthrow";
+import { getAllBookmarks, insertBookmarks } from "./data/bookmarks.queries.ts";
+import { isActiveToken } from "./data/active-tokens.queries.ts";
 
 describe("api", () => {
   const getConfigSpy = vi.spyOn(config, "getConfig");
@@ -87,7 +89,7 @@ describe("api", () => {
         },
       ];
 
-      const insertResult = await database.insertBookmarks(testBookmarks);
+      const insertResult = await insertBookmarks(testBookmarks);
       expect(insertResult.isOk()).toBe(true);
 
       const response = await api.inject({
@@ -130,7 +132,7 @@ describe("api", () => {
 
       const testBookmarks = [example1, google, example2];
 
-      const insertResult = await database.insertBookmarks(testBookmarks);
+      const insertResult = await insertBookmarks(testBookmarks);
       expect(insertResult.isOk()).toBe(true);
 
       const searchResp = await api.inject({
@@ -165,7 +167,7 @@ describe("api", () => {
           embedding: randomEmbedding(),
         }));
 
-        const insertResult = await database.insertBookmarks(testBookmarks);
+        const insertResult = await insertBookmarks(testBookmarks);
         expect(insertResult.isOk()).toBe(true);
 
         const response = await api.inject({
@@ -187,7 +189,7 @@ describe("api", () => {
           embedding: randomEmbedding(),
         }));
 
-        const insertResult = await database.insertBookmarks(testBookmarks);
+        const insertResult = await insertBookmarks(testBookmarks);
         expect(insertResult.isOk()).toBe(true);
 
         const response = await api.inject({
@@ -232,7 +234,7 @@ describe("api", () => {
       expect(embedTextSpy).toHaveBeenCalled();
       expect(getPageMetadataSpy).toHaveBeenCalled();
 
-      const bookmarksResult = await database.getAllBookmarks(null);
+      const bookmarksResult = await getAllBookmarks(null);
       expect(bookmarksResult.isOk()).toBe(true);
       if (bookmarksResult.isOk()) {
         expect(bookmarksResult.value.map((b) => b.url)).toEqual(
@@ -270,7 +272,7 @@ describe("api", () => {
       });
 
       expect(del.statusCode).toBe(200);
-      const isActiveResult = await database.isActiveToken(jti);
+      const isActiveResult = await isActiveToken(jti);
       expect(isActiveResult.isOk()).toBe(true);
       if (isActiveResult.isOk()) {
         expect(isActiveResult.value).toBe(false);

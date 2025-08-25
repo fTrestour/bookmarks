@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { err, ok } from "neverthrow";
 import { embedText } from "../ai/embeddings.ts";
 import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
-import { insertBookmarks } from "../database.ts";
+import { insertBookmarks } from "../data/bookmarks.queries.ts";
 import { createInvalidUrlError } from "../errors.ts";
 
 export async function saveBookmark(url: string) {

@@ -2,7 +2,10 @@ import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 import { err, ok } from "neverthrow";
 import { getConfig } from "../config.ts";
-import { insertActiveToken, isActiveToken } from "../database.ts";
+import {
+  insertActiveToken,
+  isActiveToken,
+} from "../data/active-tokens.queries.ts";
 import { createInvalidTokenError } from "../errors.ts";
 import { activeTokenSchema } from "../types.ts";
 
