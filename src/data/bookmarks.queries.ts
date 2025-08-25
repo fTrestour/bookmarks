@@ -165,7 +165,9 @@ export async function getPendingBookmarks() {
     const result = await database
       .select()
       .from(schema.bookmarks)
-      .where(inArray(schema.bookmarks.status, ["pending", "processing"]));
+      .where(
+        inArray(schema.bookmarks.status, ["pending", "processing", "failed"]),
+      );
 
     return ok(result);
   } catch (error) {
