@@ -8,7 +8,7 @@ import * as embeddings from "./ai/embeddings.ts";
 import { randomInt, randomUUID } from "crypto";
 import { createToken } from "./domains/authentication.ts";
 import { ok } from "neverthrow";
-import { getAllBookmarks, insertBookmarks } from "./data/bookmarks.queries.ts";
+import { insertBookmarks } from "./data/bookmarks.queries.ts";
 import { isActiveToken } from "./data/active-tokens.queries.ts";
 import { bookmarks } from "./data/schema.ts";
 
@@ -43,6 +43,7 @@ describe("api", () => {
       embeddingModel: "text-embedding-3-small",
       jwtSecret: "test_secret",
       limit: 10,
+      corsOrigins: [],
     });
 
     getPageContentSpy.mockReset().mockResolvedValue(ok("Mock page content"));
@@ -80,6 +81,7 @@ describe("api", () => {
           title: "Example Title",
           content: "Example content",
           embedding: randomEmbedding(),
+          status: "completed" as const,
         },
         {
           id: randomUUID(),
@@ -87,6 +89,7 @@ describe("api", () => {
           title: "Google Title",
           content: "Google content",
           embedding: randomEmbedding(),
+          status: "completed" as const,
         },
       ];
 
@@ -115,6 +118,7 @@ describe("api", () => {
         title: "Example Title 1",
         content: "Example content",
         embedding: defaultEmbedding,
+        status: "completed" as const,
       };
       const google = {
         id: randomUUID(),
@@ -122,6 +126,7 @@ describe("api", () => {
         title: "Google Title",
         content: "Google content",
         embedding: randomEmbedding(),
+        status: "completed" as const,
       };
       const example2 = {
         id: randomUUID(),
@@ -129,6 +134,7 @@ describe("api", () => {
         title: "Example Title 2",
         content: "Example content 2",
         embedding: randomEmbedding(),
+        status: "completed" as const,
       };
 
       const testBookmarks = [example1, google, example2];
@@ -166,6 +172,7 @@ describe("api", () => {
           title: `Example Title ${i}`,
           content: `Example content ${i}`,
           embedding: randomEmbedding(),
+          status: "completed" as const,
         }));
 
         const insertResult = await insertBookmarks(testBookmarks);
@@ -188,6 +195,7 @@ describe("api", () => {
           title: `Example Title ${i}`,
           content: `Example content ${i}`,
           embedding: randomEmbedding(),
+          status: "completed" as const,
         }));
 
         const insertResult = await insertBookmarks(testBookmarks);
@@ -234,14 +242,6 @@ describe("api", () => {
       });
       expect(embedTextSpy).toHaveBeenCalled();
       expect(getPageMetadataSpy).toHaveBeenCalled();
-
-      const bookmarksResult = await getAllBookmarks(null);
-      expect(bookmarksResult.isOk()).toBe(true);
-      if (bookmarksResult.isOk()) {
-        expect(bookmarksResult.value.map((b) => b.url)).toEqual(
-          expect.arrayContaining([url]),
-        );
-      }
     });
   });
 

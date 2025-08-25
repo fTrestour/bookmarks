@@ -1,9 +1,9 @@
-import { eq, isNotNull, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { err, ok } from "neverthrow";
+import type { BookmarkStatus } from "../domains/types.ts";
 import { createDatabaseError } from "../errors.ts";
 import { getDb } from "./database.ts";
 import { bookmarks, type NewBookmark } from "./schema.ts";
-import type { BookmarkStatus } from "../domains/types.ts";
 
 export async function insertBookmarks(bookmarksToInsert: NewBookmark[]) {
   const dbResult = await getDb();
@@ -37,7 +37,6 @@ export async function getAllBookmarks(
   }
   const db = dbResult.value;
 
-  // TODO: Make that DRYer
   try {
     if (searchEmbedding) {
       const base = db
@@ -48,15 +47,22 @@ export async function getAllBookmarks(
           content: bookmarks.content,
         })
         .from(bookmarks)
-        .where(isNotNull(bookmarks.embedding))
+        .where(eq(bookmarks.status, "completed" as BookmarkStatus))
         .orderBy(
           sql`vector_distance_cos(${bookmarks.embedding}, vector32(${JSON.stringify(searchEmbedding)}))`,
         );
-      const result = await (limitCount ? base.limit(limitCount) : base);
+      const result = await (limitCount !== undefined
+        ? base.limit(limitCount)
+        : base);
       return ok(result);
     } else {
-      const base = db.select().from(bookmarks);
-      const result = await (limitCount ? base.limit(limitCount) : base);
+      const base = db
+        .select()
+        .from(bookmarks)
+        .where(eq(bookmarks.status, "completed" as BookmarkStatus));
+      const result = await (limitCount !== undefined
+        ? base.limit(limitCount)
+        : base);
       return ok(result);
     }
   } catch (error) {
