@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import {
   sqliteTable,
   text,
+  integer,
   uniqueIndex,
   customType,
 } from "drizzle-orm/sqlite-core";
@@ -33,6 +34,12 @@ export const bookmarks = sqliteTable(
     embedding: float32Array("embedding", { dimensions: 1536 }).default(
       sql`NULL`,
     ),
+    status: text().notNull().default("completed"),
+    createdAt: integer("created_at")
+      .notNull()
+      .default(sql`CURRENT_TIMESTAMP`),
+    processedAt: integer("processed_at"),
+    errorMessage: text("error_message"),
   },
   (table) => [uniqueIndex("bookmarks_url_unique").on(table.url)],
 );

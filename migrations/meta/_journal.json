@@ -15,6 +15,13 @@
       "when": 1756108269133,
       "tag": "0001_outgoing_goliath",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1756116464638,
+      "tag": "0002_brainy_pretty_boy",
+      "breakpoints": true
     }
   ]
 }
