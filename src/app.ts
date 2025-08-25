@@ -6,7 +6,11 @@ const start = async () => {
   try {
     const { port, host, env, dbUri } = getConfig();
 
-    await getDb();
+    const dbResult = await getDb();
+    if (dbResult.isErr()) {
+      api.log.error(dbResult.error);
+      process.exit(1);
+    }
     api.log.info(`Connected to database at ${dbUri}`);
 
     await api.listen({ port, host });
