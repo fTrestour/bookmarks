@@ -41,3 +41,6 @@ Prefer running single tests, and not the whole test suite, for performance
 
 You can manually test endpoints using the `curl` command, along with `jq` if needed.
 You also have access to the `docker` command to debug the container.
+
+- avoid adding comments as much as possible, prefer explicit variable names, types or even testing. Only add comments to explicit a code design decision that can't be explicited otherwise.
+- In @src/database.ts, always use a zod schema from @src/types.ts to validate and build return objects. Create new schemas in @src/types.ts if needed for specific database return types.

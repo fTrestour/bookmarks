@@ -4,9 +4,9 @@ export function getLoggerConfig() {
   const { env } = getConfig();
 
   if (env === "production") {
-    return true; // JSON logging in production
+    return true;
   } else if (env === "test") {
-    return false; // No logging in test
+    return false;
   } else {
     return {
       transport: {
@@ -15,6 +15,6 @@ export function getLoggerConfig() {
           colorize: true,
         },
       },
-    }; // Pretty logging for development
+    };
   }
 }
