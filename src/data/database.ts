@@ -16,14 +16,12 @@ let initialized: Promise<Result<void, DatabaseError>> | null = null;
 
 export async function runMigrations(drizzleDb: ReturnType<typeof drizzle>) {
   try {
-    console.log(getConfig());
     await migrate(drizzleDb, {
       migrationsFolder: join(import.meta.dirname, "..", "..", "migrations"),
     });
 
     return ok();
   } catch (error) {
-    console.error(error);
     return err(
       createDatabaseError(
         `Failed to run migrations: ${
