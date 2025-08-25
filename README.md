@@ -46,6 +46,7 @@ The application requires several environment variables to be configured. Copy `.
 - `SCRAPING_AI_MODEL`: AI model for content extraction (default: `gpt-4.1-mini`)
 - `AI_EMBEDDING_MODEL`: AI model for generating embeddings (default: `text-embedding-3-small`)
 - `NODE_ENV`: Environment mode (default: `development`)
+- `CORS_ORIGINS`: Comma-separated list of allowed origins for CORS (default: empty array, allows all origins)
 
 ### Rate Limiting
 

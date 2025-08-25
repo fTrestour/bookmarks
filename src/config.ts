@@ -11,6 +11,7 @@ const configSchema = z.object({
   embeddingModel: z.string().min(1),
   jwtSecret: z.string().min(1),
   limit: z.number({ coerce: true }).int().positive(),
+  corsOrigins: z.array(z.string()).default([]),
 });
 
 const defaultConfig = {
@@ -24,6 +25,7 @@ const defaultConfig = {
   embeddingModel: "text-embedding-3-small",
   jwtSecret: "dev_secret",
   limit: 10,
+  corsOrigins: [],
 } as const;
 
 export function getConfig(): z.infer<typeof configSchema> {
@@ -38,6 +40,9 @@ export function getConfig(): z.infer<typeof configSchema> {
     embeddingModel: process.env.AI_EMBEDDING_MODEL,
     jwtSecret: process.env.JWT_SECRET,
     limit: process.env.LIMIT,
+    corsOrigins: process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
+      : undefined,
   };
 
   let parsedConfig = configSchema.partial().parse(configData);
@@ -56,6 +61,7 @@ export function getConfig(): z.infer<typeof configSchema> {
         parsedConfig.embeddingModel ?? defaultConfig.embeddingModel,
       jwtSecret: parsedConfig.jwtSecret ?? defaultConfig.jwtSecret,
       limit: parsedConfig.limit ?? defaultConfig.limit,
+      corsOrigins: parsedConfig.corsOrigins ?? [...defaultConfig.corsOrigins],
     };
   }
 
