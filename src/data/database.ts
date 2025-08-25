@@ -45,8 +45,6 @@ export async function getDb() {
 
     console.log("Running migrations...");
     const migrationsResult = await runMigrations(newClient);
-    console.log("Migrations result:", migrationsResult);
-
     if (migrationsResult.isErr()) {
       return err(migrationsResult.error);
     }
