@@ -3,13 +3,12 @@ import {
   getBookmarkById,
   updateBookmark,
   getPendingBookmarks,
-} from "./database.ts";
-import { reprocessBookmark } from "./domains/bookmarks.ts";
+} from "./data/bookmarks.queries.ts";
+import { processBookmark } from "./domains/bookmarks.ts";
 
 async function reindexBookmark(id: string) {
   console.log(`🔄 Reindexing bookmark with ID: ${id}`);
 
-  // Get existing bookmark
   const bookmarkResult = await getBookmarkById(id);
   if (bookmarkResult.isErr()) {
     console.error(`❌ Error: ${bookmarkResult.error.message}`);
@@ -20,7 +19,6 @@ async function reindexBookmark(id: string) {
   console.log(`📄 Found bookmark: ${bookmark.title}`);
   console.log(`🔗 URL: ${bookmark.url}`);
 
-  // Re-extract content from URL
   console.log(`⚙️️ Re-embedding content...`);
   if (!bookmark.content || bookmark.content.trim().length === 0) {
     console.error(
@@ -32,14 +30,13 @@ async function reindexBookmark(id: string) {
   const embeddingResult = await embedText(bookmark.content);
   if (embeddingResult.isErr()) {
     console.error(
-      `❌ Failed to extract content: ${embeddingResult.error.message}`,
+      `❌ Failed to compute embedding for bookmark: ${embeddingResult.error.message}`,
     );
     return process.exit(1);
   }
 
   const embedding = embeddingResult.value;
 
-  // Update bookmark in database
   console.log(`💾 Updating bookmark in database...`);
   const updateResult = await updateBookmark(
     id,
@@ -47,6 +44,7 @@ async function reindexBookmark(id: string) {
     bookmark.title,
     embedding,
   );
+
   if (updateResult.isErr()) {
     console.error(
       `❌ Failed to update bookmark: ${updateResult.error.message}`,
@@ -57,7 +55,7 @@ async function reindexBookmark(id: string) {
   console.log(`🎉 Successfully reindexed bookmark with ID: ${id}`);
 }
 
-async function reprocessPendingBookmarks() {
+async function reprocessBookmarks() {
   console.log(`🔄 Finding pending bookmarks...`);
 
   const pendingResult = await getPendingBookmarks();
@@ -84,14 +82,12 @@ async function reprocessPendingBookmarks() {
       console.log(`⚠️ Previous error: ${bookmark.errorMessage}`);
     }
 
-    try {
-      await reprocessBookmark(bookmark.id, bookmark.url);
-      console.log(`✅ Successfully processed bookmark`);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      console.error(`❌ Failed to process bookmark: ${errorMessage}`);
+    const result = await processBookmark(bookmark.id);
+    if (result.isErr()) {
+      console.error(`❌ Failed to process bookmark: ${result.error.message}`);
+      continue;
     }
+    console.log(`✅ Successfully processed bookmark`);
   }
 
   console.log(
@@ -122,6 +118,13 @@ Description:
   if (command === "reindex") {
     const bookmarkId = args[1];
 
+    if (!bookmarkId) {
+      console.error(
+        `❌ Error: Missing bookmark ID. Usage: npm run cli -- reindex <bookmark-id>`,
+      );
+      return process.exit(1);
+    }
+
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(bookmarkId)) {
@@ -133,7 +136,7 @@ Description:
     }
     await reindexBookmark(bookmarkId);
   } else if (command === "reprocess-pending") {
-    await reprocessPendingBookmarks();
+    await reprocessBookmarks();
   } else {
     console.error(
       `❌ Error: Invalid command. Expected "reindex" or "reprocess-pending".`,
