@@ -1,15 +1,8 @@
-import type { command} from "@drizzle-team/brocli";
 import { run } from "@drizzle-team/brocli";
-import { reindex } from "./reindex.ts";
-import { reindexAll } from "./reindex-all.ts";
+import { reindex } from "./reindex";
+import { reindexAll } from "./reindex-all";
 
-void run(
-  [
-    reindex as unknown as ReturnType<typeof command>,
-    reindexAll as unknown as ReturnType<typeof command>,
-  ],
-  {
-    name: "bookmarks",
-    description: "Bookmarks CLI",
-  },
-);
+void run([reindex, reindexAll], {
+  name: "bookmarks",
+  description: "Bookmarks CLI",
+});
