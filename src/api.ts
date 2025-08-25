@@ -4,7 +4,8 @@ import type { Err } from "neverthrow";
 import { z } from "zod";
 import { embedText } from "./ai/embeddings.ts";
 import { getConfig } from "./config.ts";
-import { deleteActiveToken, getAllBookmarks } from "./database.ts";
+import { deleteActiveToken } from "./data/active-tokens.queries.ts";
+import { getAllBookmarks } from "./data/bookmarks.queries.ts";
 import { createToken, validateToken } from "./domains/authentication.ts";
 import { saveBookmark } from "./domains/bookmarks.ts";
 import type { AppError } from "./errors.ts";
@@ -90,7 +91,14 @@ api.get("/bookmarks", async (request, reply) => {
     return;
   }
 
-  return bookmarksResult.value;
+  // Filter to only return expected fields
+  const filteredBookmarks = bookmarksResult.value.map((bookmark) => ({
+    id: bookmark.id,
+    url: bookmark.url,
+    title: bookmark.title,
+  }));
+
+  return filteredBookmarks;
 });
 
 api.post("/bookmarks", {
