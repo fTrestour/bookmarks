@@ -2,12 +2,17 @@ import { randomUUID } from "crypto";
 import { err, ok } from "neverthrow";
 import { embedText } from "../ai/embeddings.ts";
 import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
-import { insertBookmarks } from "../data/bookmarks.queries.ts";
+import {
+  insertBookmarks,
+  updateBookmark,
+  updateBookmarkStatus,
+} from "../data/bookmarks.queries.ts";
 import { createInvalidUrlError } from "../errors.ts";
 
 export async function saveBookmark(url: string) {
-  const bookmarkResult = await getBookmarkDataFromUrl(url);
-  if (bookmarkResult.isErr()) {
+  try {
+    new URL(url);
+  } catch {
     return ok({
       processedCount: 1,
       successCount: 0,
@@ -15,16 +20,101 @@ export async function saveBookmark(url: string) {
     });
   }
 
-  const insertResult = await insertBookmarks([bookmarkResult.value]);
+  const bookmarkId = randomUUID();
+  const insertResult = await insertBookmarks([
+    {
+      id: bookmarkId,
+      url,
+      status: "pending",
+      createdAt: Date.now(),
+    },
+  ]);
+
   if (insertResult.isErr()) {
     return err(insertResult.error);
   }
+
+  processBookmarkAsync(bookmarkId, url).catch(console.error);
 
   return ok({
     processedCount: 1,
     successCount: 1,
     failedCount: 0,
   });
+}
+
+async function processBookmarkAsync(bookmarkId: string, url: string) {
+  const statusUpdateResult = await updateBookmarkStatus(
+    bookmarkId,
+    "processing",
+  );
+  if (statusUpdateResult.isErr()) {
+    console.error(
+      `Failed to update status to processing for bookmark ${bookmarkId}:`,
+      statusUpdateResult.error,
+    );
+    return;
+  }
+
+  try {
+    const contentResult = await getPageContent(url);
+    if (contentResult.isErr()) {
+      await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        contentResult.error.message,
+      );
+      return;
+    }
+
+    const content = contentResult.value;
+
+    const [embeddingResult, metadataResult] = await Promise.all([
+      embedText(content),
+      getPageMetadata(content, url),
+    ]);
+
+    if (embeddingResult.isErr()) {
+      await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        embeddingResult.error.message,
+      );
+      return;
+    }
+
+    if (metadataResult.isErr()) {
+      await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        metadataResult.error.message,
+      );
+      return;
+    }
+
+    const updateResult = await updateBookmark(
+      bookmarkId,
+      content,
+      metadataResult.value.title || "",
+      embeddingResult.value,
+    );
+
+    if (updateResult.isErr()) {
+      await updateBookmarkStatus(
+        bookmarkId,
+        "failed",
+        updateResult.error.message,
+      );
+      return;
+    }
+
+    console.log(`Successfully processed bookmark ${bookmarkId}`);
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    await updateBookmarkStatus(bookmarkId, "failed", errorMessage);
+    console.error(`Failed to process bookmark ${bookmarkId}:`, error);
+  }
 }
 
 export async function getBookmarkDataFromUrl(url: string) {
@@ -61,4 +151,9 @@ export async function getBookmarkDataFromUrl(url: string) {
     embedding: embeddingResult.value,
     ...metadataResult.value,
   });
+}
+
+export async function reprocessBookmark(bookmarkId: string, url: string) {
+  console.log(`Reprocessing bookmark ${bookmarkId}...`);
+  await processBookmarkAsync(bookmarkId, url);
 }
