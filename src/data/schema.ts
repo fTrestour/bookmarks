@@ -34,7 +34,7 @@ export const bookmarks = sqliteTable(
     embedding: float32Array("embedding", { dimensions: 1536 }).default(
       sql`NULL`,
     ),
-    status: text().notNull().default("completed"),
+    status: text().notNull().default("pending"),
     createdAt: integer("created_at")
       .notNull()
       .default(sql`CURRENT_TIMESTAMP`),

@@ -22,6 +22,13 @@
       "when": 1756116464638,
       "tag": "0002_brainy_pretty_boy",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1756116533080,
+      "tag": "0003_fair_viper",
+      "breakpoints": true
     }
   ]
 }
