@@ -39,44 +39,24 @@ export async function getAllBookmarks(
   // TODO: Make that DRYer
   try {
     if (searchEmbedding) {
-      if (limitCount) {
-        const result = await db
-          .select({
-            id: bookmarks.id,
-            url: bookmarks.url,
-            title: bookmarks.title,
-            content: bookmarks.content,
-          })
-          .from(bookmarks)
-          .where(isNotNull(bookmarks.embedding))
-          .orderBy(
-            sql`vector_distance_cos(${bookmarks.embedding}, vector32(${JSON.stringify(searchEmbedding)}))`,
-          )
-          .limit(limitCount);
-        return ok(result);
-      } else {
-        const result = await db
-          .select({
-            id: bookmarks.id,
-            url: bookmarks.url,
-            title: bookmarks.title,
-            content: bookmarks.content,
-          })
-          .from(bookmarks)
-          .where(isNotNull(bookmarks.embedding))
-          .orderBy(
-            sql`vector_distance_cos(${bookmarks.embedding}, vector32(${JSON.stringify(searchEmbedding)}))`,
-          );
-        return ok(result);
-      }
+      const base = db
+        .select({
+          id: bookmarks.id,
+          url: bookmarks.url,
+          title: bookmarks.title,
+          content: bookmarks.content,
+        })
+        .from(bookmarks)
+        .where(isNotNull(bookmarks.embedding))
+        .orderBy(
+          sql`vector_distance_cos(${bookmarks.embedding}, vector32(${JSON.stringify(searchEmbedding)}))`,
+        );
+      const result = await (limitCount ? base.limit(limitCount) : base);
+      return ok(result);
     } else {
-      if (limitCount) {
-        const result = await db.select().from(bookmarks).limit(limitCount);
-        return ok(result);
-      } else {
-        const result = await db.select().from(bookmarks);
-        return ok(result);
-      }
+      const base = db.select().from(bookmarks);
+      const result = await (limitCount ? base.limit(limitCount) : base);
+      return ok(result);
     }
   } catch (error) {
     return err(
