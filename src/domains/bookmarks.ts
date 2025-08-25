@@ -8,6 +8,7 @@ import {
   updateBookmarkStatus,
 } from "../data/bookmarks.queries.ts";
 import { createInvalidUrlError } from "../errors.ts";
+import type { BookmarkStatus } from "./types.ts";
 
 export async function saveBookmark(url: string) {
   try {
@@ -25,7 +26,7 @@ export async function saveBookmark(url: string) {
     {
       id: bookmarkId,
       url,
-      status: "pending",
+      status: "pending" as BookmarkStatus,
     },
   ]);
 
@@ -45,7 +46,7 @@ export async function saveBookmark(url: string) {
 async function processBookmarkAsync(bookmarkId: string, url: string) {
   const statusUpdateResult = await updateBookmarkStatus(
     bookmarkId,
-    "processing",
+    "processing" as BookmarkStatus,
   );
   if (statusUpdateResult.isErr()) {
     console.error(
@@ -60,7 +61,7 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
     if (contentResult.isErr()) {
       await updateBookmarkStatus(
         bookmarkId,
-        "failed",
+        "failed" as BookmarkStatus,
         contentResult.error.message,
       );
       return;
@@ -76,7 +77,7 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
     if (embeddingResult.isErr()) {
       await updateBookmarkStatus(
         bookmarkId,
-        "failed",
+        "failed" as BookmarkStatus,
         embeddingResult.error.message,
       );
       return;
@@ -85,7 +86,7 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
     if (metadataResult.isErr()) {
       await updateBookmarkStatus(
         bookmarkId,
-        "failed",
+        "failed" as BookmarkStatus,
         metadataResult.error.message,
       );
       return;
@@ -101,7 +102,7 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
     if (updateResult.isErr()) {
       await updateBookmarkStatus(
         bookmarkId,
-        "failed",
+        "failed" as BookmarkStatus,
         updateResult.error.message,
       );
       return;
@@ -111,7 +112,11 @@ async function processBookmarkAsync(bookmarkId: string, url: string) {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    await updateBookmarkStatus(bookmarkId, "failed", errorMessage);
+    await updateBookmarkStatus(
+      bookmarkId,
+      "failed" as BookmarkStatus,
+      errorMessage,
+    );
     console.error(`Failed to process bookmark ${bookmarkId}:`, error);
   }
 }

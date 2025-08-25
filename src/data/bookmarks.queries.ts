@@ -3,6 +3,7 @@ import { err, ok } from "neverthrow";
 import { createDatabaseError } from "../errors.ts";
 import { getDb } from "./database.ts";
 import { bookmarks, type NewBookmark } from "./schema.ts";
+import type { BookmarkStatus } from "../domains/types.ts";
 
 export async function insertBookmarks(bookmarksToInsert: NewBookmark[]) {
   const dbResult = await getDb();
@@ -120,7 +121,7 @@ export async function updateBookmark(
         content,
         title,
         embedding,
-        status: "completed",
+        status: "completed" as BookmarkStatus,
         processedAt: Date.now(),
       })
       .where(eq(bookmarks.id, id));
@@ -139,7 +140,7 @@ export async function updateBookmark(
 
 export async function updateBookmarkStatus(
   id: string,
-  status: "pending" | "processing" | "completed" | "failed",
+  status: BookmarkStatus,
   errorMessage?: string,
 ) {
   const dbResult = await getDb();
@@ -154,7 +155,7 @@ export async function updateBookmarkStatus(
       processedAt?: number;
       errorMessage?: string;
     } = { status };
-    if (status === "completed") {
+    if (status === ("completed" as BookmarkStatus)) {
       updateData.processedAt = Date.now();
     }
     if (errorMessage) {
@@ -186,7 +187,7 @@ export async function getPendingBookmarks() {
     const result = await db
       .select()
       .from(bookmarks)
-      .where(eq(bookmarks.status, "pending"));
+      .where(eq(bookmarks.status, "pending" as BookmarkStatus));
 
     return ok(result);
   } catch (error) {

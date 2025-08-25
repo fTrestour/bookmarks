@@ -6,6 +6,7 @@ import {
   uniqueIndex,
   customType,
 } from "drizzle-orm/sqlite-core";
+import type { BookmarkStatus } from "../domains/types.ts";
 
 const float32Array = customType<{
   data: number[];
@@ -34,7 +35,9 @@ export const bookmarks = sqliteTable(
     embedding: float32Array("embedding", { dimensions: 1536 }).default(
       sql`NULL`,
     ),
-    status: text().notNull().default("pending"),
+    status: text()
+      .notNull()
+      .default("pending" as BookmarkStatus),
     createdAt: integer("created_at"),
     processedAt: integer("processed_at"),
     errorMessage: text("error_message"),
