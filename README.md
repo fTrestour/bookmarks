@@ -1,6 +1,6 @@
 # Bookmarks
 
-A simple bookmark manager. This application allows you to save bookmarks with automatically extracted metadata and search through them using semantic queries.
+A simple bookmark manager. This application allows you to save bookmarks with automatically extracted metadata and search through them using semantic queries powered by embeddings.
 
 [![CI](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml/badge.svg)](https://github.com/fTrestour/bookmarks/actions/workflows/ci.yml)
 
@@ -10,6 +10,8 @@ A simple bookmark manager. This application allows you to save bookmarks with au
 - **AI-Powered Search**: Search bookmarks using natural language queries with semantic similarity
 - **Secure API**: Token-based authentication for bookmark management
 - **Rate Limiting**: Built-in protection against API abuse with configurable limits per endpoint
+- **CLI Tools**: Command-line interface for bookmark management and reprocessing
+- **Vector Database**: SQLite with vector support for efficient similarity search
 
 ### Quick Start
 
@@ -29,16 +31,21 @@ A simple bookmark manager. This application allows you to save bookmarks with au
 
 ### Configuration
 
-The application requires several environment variables to be configured:
+The application requires several environment variables to be configured. Copy `.env.example` to `.env` and configure:
+
+**Required Environment Variables:**
+
+- `OPENAI_API_KEY`: Your OpenAI API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+- `JWT_SECRET`: Secret key for signing JWT tokens (generate a secure random string)
+
+**Optional Configuration:**
 
 - `PORT`: Server port (default: 3000)
 - `HOST`: Server host (default: localhost)
-- `DB_URL`: Database connection URL (e.g., `file:sqlite/db.sqlite`)
-- `OPENAI_API_KEY`: Your OpenAI API key for content extraction and embeddings
-- `SCRAPING_AI_MODEL`: AI model for content extraction (e.g., `gpt-4.1-mini`)
-- `AI_EMBEDDING_MODEL`: AI model for generating embeddings (e.g., `text-embedding-3-small`)
-- `JWT_SECRET`: Secret for signing JWT tokens
-- `NODE_ENV`: Environment mode (`development` or `production`)
+- `DB_URL`: Database connection URL (default: `file:sqlite/db.sqlite`)
+- `SCRAPING_AI_MODEL`: AI model for content extraction (default: `gpt-4.1-mini`)
+- `AI_EMBEDDING_MODEL`: AI model for generating embeddings (default: `text-embedding-3-small`)
+- `NODE_ENV`: Environment mode (default: `development`)
 
 ### Rate Limiting
 
@@ -66,11 +73,13 @@ The API includes standard rate limiting headers in responses:
 - `X-RateLimit-Remaining`: Number of requests remaining in the current window
 - `X-RateLimit-Reset`: Time when the rate limit window resets
 
-### API Usage
+## API Usage
 
-#### Authentication
+### Authentication
 
-The API requires token-based authentication for bookmark creation. Authentication is managed through JWT tokens.
+The API uses JWT-based authentication for bookmark management. An admin token is required to create and manage user tokens.
+
+#### Token Management
 
 **Create a Token:**
 
@@ -81,7 +90,14 @@ curl -X POST http://localhost:3000/tokens \
   -d '{"name": "my-token"}'
 ```
 
-_Note: Token creation is rate-limited to 1 request per hour._
+Response:
+
+```json
+{
+  "token": "jwt_token_string",
+  "jti": "token_id_for_deletion"
+}
+```
 
 **Delete a Token:**
 
@@ -89,6 +105,8 @@ _Note: Token creation is rate-limited to 1 request per hour._
 curl -X DELETE http://localhost:3000/tokens/TOKEN_JTI \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
+
+### Bookmark Operations
 
 #### Add a Bookmark
 
@@ -99,7 +117,13 @@ curl -X POST http://localhost:3000/bookmarks \
   -d '{"url": "https://example.com/article"}'
 ```
 
-_Note: Bookmark creation is rate-limited to 1 request per minute._
+**Processing Flow:**
+
+1. Bookmark is immediately saved with "pending" status
+2. Content extraction starts in the background
+3. AI processes the content to extract title and metadata
+4. Vector embeddings are generated for semantic search
+5. Status updates to "completed" or "failed"
 
 #### Search Bookmarks
 
@@ -107,13 +131,28 @@ _Note: Bookmark creation is rate-limited to 1 request per minute._
 # Get all bookmarks
 curl http://localhost:3000/bookmarks
 
-# Search bookmarks with natural language
+# Semantic search with natural language
+curl "http://localhost:3000/bookmarks?search=machine learning tutorials"
+
+# Vector similarity search
 curl "http://localhost:3000/bookmarks?search=artificial intelligence"
 ```
 
-#### API Response Format
+### API Reference
 
-**Bookmark Creation Response:**
+#### Endpoints
+
+| Method | Endpoint       | Auth Required | Description           |
+| ------ | -------------- | ------------- | --------------------- |
+| GET    | `/`            | No            | Health check          |
+| POST   | `/tokens`      | Admin         | Create new auth token |
+| DELETE | `/tokens/:jti` | Admin         | Delete auth token     |
+| GET    | `/bookmarks`   | No            | List/search bookmarks |
+| POST   | `/bookmarks`   | Yes           | Add new bookmark      |
+
+#### Response Formats
+
+**Bookmark Creation:**
 
 ```json
 {
@@ -126,65 +165,74 @@ curl "http://localhost:3000/bookmarks?search=artificial intelligence"
 }
 ```
 
-**Bookmark Search Response:**
-
-Bookmarks are returned as an array with the following structure:
+**Bookmark List:**
 
 ```json
 [
   {
-    "id": "uuid",
+    "id": "uuid-string",
     "url": "https://example.com",
     "title": "Extracted Title"
   }
 ]
 ```
 
-## Development
+**Error Response:**
 
-### Available Scripts
+```json
+{
+  "error": "Error message",
+  "code": "ERROR_CODE"
+}
+```
 
-- `npm run dev`: Start the development server with file watching
-- `npm start`: Start the production server
-- `npm run cli -- <command> <bookmark-id>`: Run a CLI command
-- `npm test`: Run tests once
-- `npm run test:watch`: Run tests in watch mode
-- `npm run check-types`: Run TypeScript type checking
-- `npm run lint`: Run ESLint
-- `npm run lint:fix`: Run ESLint with automatic fixes
-- `npm run format`: Format code with Prettier
-- `npm run format:check`: Check code formatting
+## CLI Tools
 
-### Development Workflow
+The application includes a command-line interface for bookmark management:
 
-1. Start the development server: `npm run dev`
-2. Make your changes
-3. Run type checking: `npm run check-types`
-4. Run linting: `npm run lint`
-5. Format code: `npm run format`
-6. Run tests: `npm run test`
+### Available Commands
+
+```bash
+# Reindex a specific bookmark (regenerate embeddings)
+npm run cli reindex <bookmark-id>
+
+# Reindex all bookmarks in batches (default: 10 per batch)
+npm run cli reindex-all [batch-size]
+
+# Reprocess all pending bookmarks
+npm run cli reprocess-pending
+```
+
+### Examples
+
+```bash
+# Reindex a specific bookmark
+npm run cli reindex abc123-def456-ghi789
+
+# Reindex all bookmarks with custom batch size
+npm run cli reindex-all 5
+
+# Reprocess any bookmarks stuck in pending state
+npm run cli reprocess-pending
+```
 
 ## Architecture
 
-The application is built with:
+### Technology Stack
 
-- **Fastify**: Web framework for the API
-- **SQLite**: Database for storing bookmarks
-- **OpenAI API**: For content extraction and embedding generation
-- **Playwright**: For web scraping
-- **Zod**: Runtime type validation
-- **JWT**: Token-based authentication
+- **Fastify**: High-performance web framework
+- **SQLite with Vector Extensions**: Database with vector similarity support
+- **Drizzle ORM**: Type-safe database queries and migrations
+- **OpenAI API**: Content extraction and embedding generation
+- **Playwright**: Headless browser for web scraping
+- **Zod**: Runtime schema validation
+- **JWT**: Secure token-based authentication
+- **neverthrow**: Type-safe error handling
 
-### CLI Tools
+### Key Components
 
-The application includes a command-line interface for the following tasks:
-
-- `reindex`: Reindex a bookmark
-
-```bash
-npm run cli -- <command> <bookmark-id>
-```
-
-## TODO
-
-- [ ] LLM tracing
+- **API Layer** (`src/api.ts`): Fastify routes with authentication and rate limiting
+- **Domain Logic** (`src/domains/`): Business logic for bookmarks and authentication
+- **Data Layer** (`src/data/`): Database queries and schema definitions
+- **AI Services** (`src/ai/`): OpenAI integration for content extraction and embeddings
+- **CLI Tools** (`src/cli/`): Command-line utilities for maintenance tasks
