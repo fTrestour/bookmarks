@@ -3,171 +3,80 @@ import { err, ok } from "neverthrow";
 import { embedText } from "../ai/embeddings.ts";
 import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
 import {
-  insertBookmarks,
+  getBookmarkById,
+  insertBookmark,
   updateBookmark,
   updateBookmarkStatus,
-} from "../database.ts";
+} from "../data/bookmarks.queries.ts";
 import { createInvalidUrlError } from "../errors.ts";
+import { z } from "zod";
 
-// Fast path: Create bookmark immediately without content
 export async function saveBookmark(url: string) {
   try {
-    new URL(url);
+    z.string().url().parse(url);
   } catch {
     return err(createInvalidUrlError(url));
   }
 
   const bookmarkId = randomUUID();
-  const now = new Date();
 
-  // Insert bookmark with pending status
-  const insertResult = await insertBookmarks([
-    {
-      id: bookmarkId,
-      url,
-      title: null,
-      content: null,
-      embedding: null,
-      status: "pending",
-      createdAt: now,
-    },
-  ]);
+  const insertResult = await insertBookmark({
+    id: bookmarkId,
+    url,
+    status: "pending",
+  });
 
   if (insertResult.isErr()) {
     return err(insertResult.error);
   }
 
-  // Queue async processing (don't await)
-  processBookmarkAsync(bookmarkId, url).catch((error: unknown) => {
-    console.error(`Failed to process bookmark ${bookmarkId}:`, error);
-  });
-
-  return ok({
-    processedCount: 1,
-    successCount: 1,
-    failedCount: 0,
-  });
-}
-
-// Original function renamed for async processing
-export async function saveBookmarkSync(url: string) {
-  const bookmarkResult = await getBookmarkDataFromUrl(url);
-  if (bookmarkResult.isErr()) {
-    return ok({
-      processedCount: 1,
-      successCount: 0,
-      failedCount: 1,
-    });
-  }
-
-  const insertResult = await insertBookmarks([bookmarkResult.value]);
-  if (insertResult.isErr()) {
-    return err(insertResult.error);
-  }
-
-  return ok({
-    processedCount: 1,
-    successCount: 1,
-    failedCount: 0,
-  });
-}
-
-// Async processing function
-async function processBookmarkAsync(bookmarkId: string, url: string) {
-  try {
-    // Update status to processing
-    {
-      const r = await updateBookmarkStatus(bookmarkId, "processing");
-      if (r.isErr()) {
-        console.error(`Failed to set processing for ${bookmarkId}:`, r.error);
+  processBookmark(bookmarkId)
+    .then((result) => {
+      if (result.isErr()) {
+        console.error(
+          `Failed to process bookmark ${bookmarkId}:`,
+          result.error,
+        );
       }
-    }
-
-    // Get page content and metadata
-    const contentResult = await getPageContent(url);
-    if (contentResult.isErr()) {
-      const r = await updateBookmarkStatus(
-        bookmarkId,
-        "failed",
-        contentResult.error.message,
+    })
+    .catch((error: unknown) => {
+      console.error(
+        `Unexpected error while processing bookmark ${bookmarkId}:`,
+        error,
       );
-      if (r.isErr())
-        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
-      return;
-    }
+    });
 
-    const content = contentResult.value;
-
-    const [embeddingResult, metadataResult] = await Promise.all([
-      embedText(content),
-      getPageMetadata(content, url),
-    ]);
-
-    if (embeddingResult.isErr()) {
-      const r = await updateBookmarkStatus(
-        bookmarkId,
-        "failed",
-        embeddingResult.error.message,
-      );
-      if (r.isErr())
-        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
-      return;
-    }
-
-    if (metadataResult.isErr()) {
-      const r = await updateBookmarkStatus(
-        bookmarkId,
-        "failed",
-        metadataResult.error.message,
-      );
-      if (r.isErr())
-        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
-      return;
-    }
-
-    // Update bookmark with content, title, and embedding
-    const updateResult = await updateBookmark(
-      bookmarkId,
-      content,
-      metadataResult.value.title,
-      embeddingResult.value,
-    );
-
-    if (updateResult.isErr()) {
-      const r = await updateBookmarkStatus(
-        bookmarkId,
-        "failed",
-        updateResult.error.message,
-      );
-      if (r.isErr())
-        console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
-      return;
-    }
-
-    // Mark as completed
-    {
-      const r = await updateBookmarkStatus(bookmarkId, "completed");
-      if (r.isErr())
-        console.error(`Failed to set completed for ${bookmarkId}:`, r.error);
-    }
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
-    const r = await updateBookmarkStatus(bookmarkId, "failed", errorMessage);
-    if (r.isErr())
-      console.error(`Failed to set failed for ${bookmarkId}:`, r.error);
-  }
+  return ok({
+    processedCount: 1,
+    successCount: 1,
+    failedCount: 0,
+  });
 }
 
-export async function getBookmarkDataFromUrl(url: string) {
-  try {
-    new URL(url);
-  } catch {
-    return err(createInvalidUrlError(url));
+export async function processBookmark(bookmarkId: string) {
+  const r = await updateBookmarkStatus(bookmarkId, "processing");
+  if (r.isErr()) {
+    return err(r.error);
   }
+
+  const bookmarkResult = await getBookmarkById(bookmarkId);
+  if (bookmarkResult.isErr()) {
+    return err(bookmarkResult.error);
+  }
+  const url = bookmarkResult.value.url;
 
   const contentResult = await getPageContent(url);
   if (contentResult.isErr()) {
+    const r = await updateBookmarkStatus(
+      bookmarkId,
+      "failed",
+      contentResult.error.message,
+    );
+
+    if (r.isErr()) {
+      return err(r.error);
+    }
+
     return err(contentResult.error);
   }
 
@@ -179,23 +88,43 @@ export async function getBookmarkDataFromUrl(url: string) {
   ]);
 
   if (embeddingResult.isErr()) {
+    const r = await updateBookmarkStatus(
+      bookmarkId,
+      "failed",
+      embeddingResult.error.message,
+    );
+    if (r.isErr()) {
+      return err(r.error);
+    }
     return err(embeddingResult.error);
   }
 
   if (metadataResult.isErr()) {
+    const r = await updateBookmarkStatus(
+      bookmarkId,
+      "failed",
+      metadataResult.error.message,
+    );
+    if (r.isErr()) return err(r.error);
     return err(metadataResult.error);
   }
 
-  return ok({
-    id: randomUUID(),
-    url,
+  const updateResult = await updateBookmark(
+    bookmarkId,
     content,
-    embedding: embeddingResult.value,
-    ...metadataResult.value,
-  });
-}
+    metadataResult.value.title,
+    embeddingResult.value,
+  );
 
-// Function to reprocess a bookmark by ID (for CLI)
-export async function reprocessBookmark(bookmarkId: string, url: string) {
-  return processBookmarkAsync(bookmarkId, url);
+  if (updateResult.isErr()) {
+    const r = await updateBookmarkStatus(
+      bookmarkId,
+      "failed",
+      updateResult.error.message,
+    );
+    if (r.isErr()) return err(r.error);
+    return err(updateResult.error);
+  }
+
+  return await updateBookmarkStatus(bookmarkId, "completed");
 }

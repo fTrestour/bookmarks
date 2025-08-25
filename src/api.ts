@@ -4,7 +4,8 @@ import type { Err } from "neverthrow";
 import { z } from "zod";
 import { embedText } from "./ai/embeddings.ts";
 import { getConfig } from "./config.ts";
-import { deleteActiveToken, getAllBookmarks } from "./database.ts";
+import { deleteActiveToken } from "./data/active-token.queries.ts";
+import { getAllCompletedBookmarks } from "./data/bookmarks.queries.ts";
 import { createToken, validateToken } from "./domains/authentication.ts";
 import { saveBookmark } from "./domains/bookmarks.ts";
 import type { AppError } from "./errors.ts";
@@ -81,7 +82,7 @@ api.get("/bookmarks", async (request, reply) => {
     searchEmbedding = embeddingResult.value;
   }
 
-  const bookmarksResult = await getAllBookmarks(
+  const bookmarksResult = await getAllCompletedBookmarks(
     searchEmbedding,
     search ? config.limit : undefined,
   );
