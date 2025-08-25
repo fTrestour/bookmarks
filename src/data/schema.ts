@@ -1,10 +1,27 @@
 import { sql } from "drizzle-orm";
 import {
-  numeric,
   sqliteTable,
   text,
   uniqueIndex,
+  customType,
 } from "drizzle-orm/sqlite-core";
+
+const float32Array = customType<{
+  data: number[];
+  config: { dimensions: number };
+  configRequired: true;
+  driverData: Buffer;
+}>({
+  dataType(config) {
+    return `F32_BLOB(${config.dimensions})`;
+  },
+  fromDriver(value: Buffer) {
+    return Array.from(new Float32Array(value.buffer));
+  },
+  toDriver(value: number[]) {
+    return sql`vector32(${JSON.stringify(value)})`;
+  },
+});
 
 export const bookmarks = sqliteTable(
   "bookmarks",
@@ -13,7 +30,9 @@ export const bookmarks = sqliteTable(
     url: text().notNull(),
     title: text(),
     content: text(),
-    embedding: numeric().default(sql`(NULL)`),
+    embedding: float32Array("embedding", { dimensions: 1536 }).default(
+      sql`NULL`,
+    ),
   },
   (table) => [uniqueIndex("bookmarks_url_unique").on(table.url)],
 );
