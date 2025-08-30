@@ -41,3 +41,5 @@ Prefer running single tests, and not the whole test suite, for performance
 
 You can manually test endpoints using the `curl` command, along with `jq` if needed.
 You also have access to the `docker` command to debug the container.
+
+- Always commit regularly to create atomic commits that are easy to review
