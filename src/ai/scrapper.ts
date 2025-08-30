@@ -2,7 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateObject, generateText } from "ai";
 import { err, ok } from "neverthrow";
 import { chromium } from "playwright";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { getConfig } from "../config.ts";
 import {
   createContentExtractionError,
