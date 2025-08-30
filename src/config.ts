@@ -25,7 +25,7 @@ const defaultConfig = {
   embeddingModel: "text-embedding-3-small",
   jwtSecret: "dev_secret",
   limit: 10,
-  corsOrigins: [],
+  corsOrigins: ["*"],
 } as const;
 
 export function getConfig(): z.infer<typeof configSchema> {
