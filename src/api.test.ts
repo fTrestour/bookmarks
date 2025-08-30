@@ -202,6 +202,32 @@ describe("api", () => {
         expect(bookmarks).toHaveLength(15);
       });
 
+      it("returns all bookmarks when search query is whitespace-only", async () => {
+        const testBookmarks = Array.from({ length: 15 }, (_, i) => ({
+          id: randomUUID(),
+          url: `https://example${i}.com/` + randomUUID(),
+          title: `Example Title ${i}`,
+          content: `Example content ${i}`,
+          embedding: randomEmbedding(),
+          status: "completed" as const,
+        }));
+
+        const insertResult = await insertBookmarks(testBookmarks);
+        expect(insertResult.isOk()).toBe(true);
+
+        const response = await api.inject({
+          method: "GET",
+          url: "/bookmarks",
+          query: { search: "   " },
+        });
+
+        expect(response.statusCode).toBe(200);
+        const bookmarks = JSON.parse(response.body) as unknown[];
+        expect(bookmarks).toHaveLength(15);
+        // When no search is performed, bookmarks should not have description field
+        expect(bookmarks[0]).not.toHaveProperty("description");
+      });
+
       it("limits results to 10 bookmarks when searching", async () => {
         const testBookmarks = Array.from({ length: 15 }, (_, i) => ({
           id: randomUUID(),

@@ -76,7 +76,9 @@ api.delete("/tokens/:jti", {
 });
 
 api.get("/bookmarks", async (request, reply) => {
-  const querySchema = z.object({ search: z.string().optional() });
+  const querySchema = z.object({
+    search: z.string().trim().optional(),
+  });
   const { search } = querySchema.parse(request.query);
 
   if (search) {
