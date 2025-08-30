@@ -44,9 +44,9 @@ The application requires several environment variables to be configured. Copy `.
 - `PORT`: Server port (default: 3000)
 - `HOST`: Server host (default: localhost)
 - `DB_URL`: Database connection URL (default: `file:sqlite/db.sqlite`)
-- `SCRAPING_AI_MODEL`: AI model for content extraction (default: `gpt-4.1-mini`)
+- `SCRAPING_AI_MODEL`: AI model for content extraction (default: `gpt-5-mini`)
 - `AI_EMBEDDING_MODEL`: AI model for generating embeddings (default: `text-embedding-3-small`)
-- `DESCRIPTION_GENERATION_AI_MODEL`: AI model for generating search descriptions (default: `gpt-4.1-mini`)
+- `DESCRIPTION_GENERATION_AI_MODEL`: AI model for generating search descriptions (default: `gpt-5-mini`)
 - `NODE_ENV`: Environment mode (default: `development`)
 - `CORS_ORIGINS`: Comma-separated list of allowed origins for CORS (default: empty array, allows all origins)
 
