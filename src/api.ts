@@ -2,7 +2,7 @@ import rateLimit from "@fastify/rate-limit";
 import cors from "@fastify/cors";
 import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import type { Err } from "neverthrow";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { getConfig } from "./config.ts";
 import { deleteActiveToken } from "./data/active-tokens.queries.ts";
 import { getAllBookmarks } from "./data/bookmarks.queries.ts";

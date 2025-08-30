@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 const configSchema = z.object({
   port: z.number({ coerce: true }).int().positive(),
