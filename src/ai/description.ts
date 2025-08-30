@@ -18,8 +18,8 @@ export async function getDescription(search: string, content: string) {
         {
           role: "system",
           content: `Write a concise 1 sentence description of the content that:
-1. Highlights how it relates to the “${search}” query  
-2. Avoids generic openers like “This article explains…”  
+1. Highlights how it relates to the "${search}" query  
+2. Avoids generic openers like "This article explains…"  
 3. Starts immediately with the main point  
 4. Stays focused and not overly verbose `,
         },
