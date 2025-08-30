@@ -44,6 +44,10 @@ export interface ContentExtractionError extends BaseError {
   readonly url: string;
 }
 
+export interface AiError extends BaseError {
+  readonly code: "AI_ERROR";
+}
+
 export type AppError =
   | DatabaseError
   | DatabaseConnectionError
@@ -53,7 +57,8 @@ export type AppError =
   | EmbeddingError
   | EmptyTextError
   | ScrapingError
-  | ContentExtractionError;
+  | ContentExtractionError
+  | AiError;
 
 export const createDatabaseError = (
   message: string,
@@ -123,5 +128,11 @@ export const createContentExtractionError = (
   code: "CONTENT_EXTRACTION_ERROR",
   message: `Failed to extract content`,
   url,
+  cause,
+});
+
+export const createAiError = (cause?: unknown): AiError => ({
+  code: "AI_ERROR",
+  message: "AI processing failed",
   cause,
 });

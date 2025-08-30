@@ -3,12 +3,11 @@ import cors from "@fastify/cors";
 import fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import type { Err } from "neverthrow";
 import { z } from "zod";
-import { embedText } from "./ai/embeddings.ts";
 import { getConfig } from "./config.ts";
 import { deleteActiveToken } from "./data/active-tokens.queries.ts";
 import { getAllBookmarks } from "./data/bookmarks.queries.ts";
 import { createToken, validateToken } from "./domains/authentication.ts";
-import { saveBookmark } from "./domains/bookmarks.ts";
+import { saveBookmark, searchBookmarks } from "./domains/bookmarks.ts";
 import type { AppError } from "./errors.ts";
 import { getLoggerConfig } from "./logger.ts";
 
@@ -77,29 +76,27 @@ api.delete("/tokens/:jti", {
 });
 
 api.get("/bookmarks", async (request, reply) => {
-  const querySchema = z.object({ search: z.string().optional() });
+  const querySchema = z.object({
+    search: z.string().trim().optional(),
+  });
   const { search } = querySchema.parse(request.query);
 
-  let searchEmbedding: number[] | null = null;
   if (search) {
-    const embeddingResult = await embedText(search);
-    if (embeddingResult.isErr()) {
-      handleError(embeddingResult, reply);
+    const bookmarksResult = await searchBookmarks(search);
+    if (bookmarksResult.isErr()) {
+      handleError(bookmarksResult, reply);
       return;
     }
-    searchEmbedding = embeddingResult.value;
+    return bookmarksResult.value;
   }
 
-  const bookmarksResult = await getAllBookmarks(
-    searchEmbedding,
-    search ? config.limit : undefined,
-  );
+  // No search query - return all bookmarks without descriptions
+  const bookmarksResult = await getAllBookmarks(null, undefined);
   if (bookmarksResult.isErr()) {
     handleError(bookmarksResult, reply);
     return;
   }
 
-  // Filter to only return expected fields
   const filteredBookmarks = bookmarksResult.value.map((bookmark) => ({
     id: bookmark.id,
     url: bookmark.url,
@@ -182,6 +179,7 @@ function handleError(
       case "EMBEDDING_ERROR":
       case "SCRAPING_ERROR":
       case "CONTENT_EXTRACTION_ERROR":
+      case "AI_ERROR":
       default:
         return 500;
     }

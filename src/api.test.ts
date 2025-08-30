@@ -5,6 +5,7 @@ import * as database from "./data/database.ts";
 import * as config from "./config.ts";
 import * as scrapper from "./ai/scrapper.ts";
 import * as embeddings from "./ai/embeddings.ts";
+import * as description from "./ai/description.ts";
 import { randomInt, randomUUID } from "crypto";
 import { createToken } from "./domains/authentication.ts";
 import { ok } from "neverthrow";
@@ -17,6 +18,7 @@ describe("api", () => {
   const getPageContentSpy = vi.spyOn(scrapper, "getPageContent");
   const getPageMetadataSpy = vi.spyOn(scrapper, "getPageMetadata");
   const embedTextSpy = vi.spyOn(embeddings, "embedText");
+  const getDescriptionSpy = vi.spyOn(description, "getDescription");
 
   const defaultEmbedding = [0.1, 0.2, 0.3];
   const randomEmbedding = () => [
@@ -41,6 +43,7 @@ describe("api", () => {
       openaiApiKey: "dummy",
       scrapingAiModel: "gpt-4o-mini",
       embeddingModel: "text-embedding-3-small",
+      descriptionGenerationAiModel: "gpt-4o-mini",
       jwtSecret: "test_secret",
       limit: 10,
       corsOrigins: [],
@@ -55,6 +58,14 @@ describe("api", () => {
     );
 
     embedTextSpy.mockReset().mockResolvedValue(ok(defaultEmbedding));
+
+    getDescriptionSpy
+      .mockReset()
+      .mockResolvedValue(
+        ok(
+          "Mock description explaining how this bookmark relates to the search query",
+        ),
+      );
 
     const tokenResult = await createToken("test-token");
     if (tokenResult.isOk()) {
@@ -149,10 +160,13 @@ describe("api", () => {
       });
 
       expect(searchResp.statusCode).toBe(200);
-      expect((JSON.parse(searchResp.body) as unknown[])[0]).toEqual({
+      const searchResults = JSON.parse(searchResp.body) as unknown[];
+      expect(searchResults[0]).toEqual({
         id: example1.id,
         url: example1.url,
         title: example1.title,
+        description:
+          "Mock description explaining how this bookmark relates to the search query",
       });
     });
 
@@ -188,6 +202,32 @@ describe("api", () => {
         expect(bookmarks).toHaveLength(15);
       });
 
+      it("returns all bookmarks when search query is whitespace-only", async () => {
+        const testBookmarks = Array.from({ length: 15 }, (_, i) => ({
+          id: randomUUID(),
+          url: `https://example${i}.com/` + randomUUID(),
+          title: `Example Title ${i}`,
+          content: `Example content ${i}`,
+          embedding: randomEmbedding(),
+          status: "completed" as const,
+        }));
+
+        const insertResult = await insertBookmarks(testBookmarks);
+        expect(insertResult.isOk()).toBe(true);
+
+        const response = await api.inject({
+          method: "GET",
+          url: "/bookmarks",
+          query: { search: "   " },
+        });
+
+        expect(response.statusCode).toBe(200);
+        const bookmarks = JSON.parse(response.body) as unknown[];
+        expect(bookmarks).toHaveLength(15);
+        // When no search is performed, bookmarks should not have description field
+        expect(bookmarks[0]).not.toHaveProperty("description");
+      });
+
       it("limits results to 10 bookmarks when searching", async () => {
         const testBookmarks = Array.from({ length: 15 }, (_, i) => ({
           id: randomUUID(),
@@ -208,8 +248,10 @@ describe("api", () => {
         });
 
         expect(response.statusCode).toBe(200);
-        const bookmarks = JSON.parse(response.body) as unknown[];
-        expect(bookmarks).toHaveLength(10);
+        const searchBookmarks = JSON.parse(response.body) as unknown[];
+        expect(searchBookmarks).toHaveLength(10);
+        // When searching, each bookmark should have a description field
+        expect(searchBookmarks[0]).toHaveProperty("description");
       });
     });
   });

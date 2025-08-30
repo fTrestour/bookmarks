@@ -8,6 +8,7 @@ A simple bookmark manager. This application allows you to save bookmarks with au
 
 - **Smart Bookmark Extraction**: Automatically extracts title and content from web pages
 - **AI-Powered Search**: Search bookmarks using natural language queries with semantic similarity
+- **Intelligent Search Descriptions**: AI-generated explanations of how bookmarks relate to your search queries
 - **Secure API**: Token-based authentication for bookmark management
 - **Rate Limiting**: Built-in protection against API abuse with configurable limits per endpoint
 - **CLI Tools**: Command-line interface for bookmark management and reprocessing
@@ -45,6 +46,7 @@ The application requires several environment variables to be configured. Copy `.
 - `DB_URL`: Database connection URL (default: `file:sqlite/db.sqlite`)
 - `SCRAPING_AI_MODEL`: AI model for content extraction (default: `gpt-4.1-mini`)
 - `AI_EMBEDDING_MODEL`: AI model for generating embeddings (default: `text-embedding-3-small`)
+- `DESCRIPTION_GENERATION_AI_MODEL`: AI model for generating search descriptions (default: `gpt-4.1-mini`)
 - `NODE_ENV`: Environment mode (default: `development`)
 - `CORS_ORIGINS`: Comma-separated list of allowed origins for CORS (default: empty array, allows all origins)
 
@@ -132,10 +134,10 @@ curl -X POST http://localhost:3000/bookmarks \
 # Get all bookmarks
 curl http://localhost:3000/bookmarks
 
-# Semantic search with natural language
+# Semantic search with natural language (returns results with descriptions)
 curl "http://localhost:3000/bookmarks?search=machine learning tutorials"
 
-# Vector similarity search
+# Vector similarity search (returns results with descriptions)
 curl "http://localhost:3000/bookmarks?search=artificial intelligence"
 ```
 
@@ -166,7 +168,7 @@ curl "http://localhost:3000/bookmarks?search=artificial intelligence"
 }
 ```
 
-**Bookmark List:**
+**Bookmark List (No Search):**
 
 ```json
 [
@@ -174,6 +176,19 @@ curl "http://localhost:3000/bookmarks?search=artificial intelligence"
     "id": "uuid-string",
     "url": "https://example.com",
     "title": "Extracted Title"
+  }
+]
+```
+
+**Search Results (With Descriptions):**
+
+```json
+[
+  {
+    "id": "uuid-string",
+    "url": "https://example.com",
+    "title": "Extracted Title",
+    "description": "This bookmark relates to your search because it contains information about machine learning concepts and provides tutorial content for beginners."
   }
 ]
 ```

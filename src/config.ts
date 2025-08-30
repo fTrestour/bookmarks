@@ -9,6 +9,7 @@ const configSchema = z.object({
   openaiApiKey: z.string().min(1),
   scrapingAiModel: z.string().min(1),
   embeddingModel: z.string().min(1),
+  descriptionGenerationAiModel: z.string().min(1),
   jwtSecret: z.string().min(1),
   limit: z.number({ coerce: true }).int().positive(),
   corsOrigins: z.array(z.string()).default([]),
@@ -23,6 +24,7 @@ const defaultConfig = {
   openaiApiKey: "dummy",
   scrapingAiModel: "gpt-4.1-mini",
   embeddingModel: "text-embedding-3-small",
+  descriptionGenerationAiModel: "gpt-4.1-mini",
   jwtSecret: "dev_secret",
   limit: 10,
   corsOrigins: ["*"],
@@ -38,6 +40,7 @@ export function getConfig(): z.infer<typeof configSchema> {
     openaiApiKey: process.env.OPENAI_API_KEY,
     scrapingAiModel: process.env.SCRAPING_AI_MODEL,
     embeddingModel: process.env.AI_EMBEDDING_MODEL,
+    descriptionGenerationAiModel: process.env.DESCRIPTION_GENERATION_AI_MODEL,
     jwtSecret: process.env.JWT_SECRET,
     limit: process.env.LIMIT,
     corsOrigins: process.env.CORS_ORIGINS
@@ -59,6 +62,9 @@ export function getConfig(): z.infer<typeof configSchema> {
         parsedConfig.scrapingAiModel ?? defaultConfig.scrapingAiModel,
       embeddingModel:
         parsedConfig.embeddingModel ?? defaultConfig.embeddingModel,
+      descriptionGenerationAiModel:
+        parsedConfig.descriptionGenerationAiModel ??
+        defaultConfig.descriptionGenerationAiModel,
       jwtSecret: parsedConfig.jwtSecret ?? defaultConfig.jwtSecret,
       limit: parsedConfig.limit ?? defaultConfig.limit,
       corsOrigins: parsedConfig.corsOrigins ?? [...defaultConfig.corsOrigins],
