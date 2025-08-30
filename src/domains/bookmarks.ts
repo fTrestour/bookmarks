@@ -1,8 +1,10 @@
 import { randomUUID } from "crypto";
 import { err, ok } from "neverthrow";
+import { getDescription } from "../ai/description.ts";
 import { embedText } from "../ai/embeddings.ts";
 import { getPageContent, getPageMetadata } from "../ai/scrapper.ts";
 import {
+  getAllBookmarks,
   insertBookmarks,
   updateBookmark,
   updateBookmarkStatus,
@@ -160,4 +162,44 @@ export async function getBookmarkDataFromUrl(url: string) {
 export async function reprocessBookmark(bookmarkId: string, url: string) {
   console.log(`Reprocessing bookmark ${bookmarkId}...`);
   await processBookmarkAsync(bookmarkId, url);
+}
+
+export async function searchBookmarks(search: string) {
+  let searchEmbedding: number[] | null = null;
+  if (search.trim()) {
+    const embeddingResult = await embedText(search);
+    if (embeddingResult.isErr()) {
+      return err(embeddingResult.error);
+    }
+    searchEmbedding = embeddingResult.value;
+  }
+
+  const bookmarksResult = await getAllBookmarks(searchEmbedding, 10);
+  if (bookmarksResult.isErr()) {
+    return err(bookmarksResult.error);
+  }
+
+  const bookmarksWithDescriptions = await Promise.all(
+    bookmarksResult.value.map(async (bookmark) => {
+      let description = "";
+      if (search.trim() && bookmark.content) {
+        const descriptionResult = await getDescription(
+          search,
+          bookmark.content,
+        );
+        if (descriptionResult.isOk()) {
+          description = descriptionResult.value;
+        }
+      }
+
+      return {
+        id: bookmark.id,
+        url: bookmark.url,
+        title: bookmark.title,
+        description,
+      };
+    }),
+  );
+
+  return ok(bookmarksWithDescriptions);
 }
