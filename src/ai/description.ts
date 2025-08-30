@@ -17,12 +17,15 @@ export async function getDescription(search: string, content: string) {
       messages: [
         {
           role: "system",
-          content:
-            "You are a helpful assistant that explains how bookmark content relates to search queries. Provide a concise explanation (1-2 sentences) of how the bookmark content matches or relates to the search query.",
+          content: `Write a concise (1–2 sentences) description of the content that  
+1. Directly ties to the “${search}” query  
+2. Avoids generic openers like “This article explains…”  
+3. Starts immediately with the main point  
+4. Stays focused and not overly verbose `,
         },
         {
           role: "user",
-          content: `Search query: "${search}"\n\nBookmark content: ${content.substring(0, 2000)}\n\nExplain how this bookmark content relates to the search query:`,
+          content,
         },
       ],
     });
